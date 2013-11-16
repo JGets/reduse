@@ -1,0 +1,19 @@
+
+body{
+	text-align: center;
+	font-family: "Arial", Arial, arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6{
+	font-family: "Futura", Arial, arial, sans-serif;
+}
+
+.wrapper{
+	width:1000px;
+	margin:auto;
+}
