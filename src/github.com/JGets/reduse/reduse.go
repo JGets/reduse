@@ -73,6 +73,8 @@ func home(ctx *web.Context){
 func error404(ctx *web.Context, url string){
 	bodyStr := "Could not locate \"" + url + "\" on this server"
 	
+	ctx.WriteHeader(404)
+	
 	templatePage(ctx,
 				 map[string]string{"template_name":"error.html",
 				 				   "template_file":"templatePages/error.html",
