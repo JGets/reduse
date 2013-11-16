@@ -1,1 +1,1 @@
-web: ./reduse
+web: reduse
