@@ -1,4 +1,4 @@
 app_name=Reduse
 server_address=redu.se
-base_url=http://redu.se/
+base_url=http://www.redu.se/
 
