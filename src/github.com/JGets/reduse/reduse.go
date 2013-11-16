@@ -215,10 +215,12 @@ func main() {
 		return
 	}
 	
+	port := os.Getenv("PORT")
 	
+	serverAddressWithPort := serverAddress + port
 	
 	web.Get("/", home)
 	web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
-	web.Run(serverAddress)
+	web.Run(serverAddressWithPort)
 	
 }
