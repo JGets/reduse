@@ -131,7 +131,7 @@ func main() {
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
 	web.Get("/", home)
-	web.Get("/generate/", )
+	web.Get("/generate/", generate)
 	web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
 	web.Run(serverAddressWithPort)
 	
