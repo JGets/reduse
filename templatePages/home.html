@@ -12,5 +12,11 @@
 			<h1>{{.title_text}}</h1>
 			{{.body_text}}
 		</div>
+		<div>
+			<form action="/generate/" method="GET">
+				<input id="url" name="url" type="text" /><br/>
+				<input type="submit" />
+			</form>
+		</div>
 	</body>
 </html>
