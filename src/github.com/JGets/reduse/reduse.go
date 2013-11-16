@@ -84,6 +84,22 @@ func error404(ctx *web.Context, url string){
 				 				   })
 }
 
+func generate(ctx *web.Context){
+	url := ctx.Params["url"]
+	
+	body := "Generate short url for " + url
+	
+	templatePage(ctx,
+				 map[string]string{"template_name":"generate.html",
+				 				   "template_file":"templatePages/generate.html",
+				 				   },
+				 map[string]string{"title_text":"Generate URL",
+				 				   "body_text":body,
+				 				   })
+	
+	
+}
+
 
 
 
@@ -115,6 +131,7 @@ func main() {
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
 	web.Get("/", home)
+	web.Get("/generate/", )
 	web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
 	web.Run(serverAddressWithPort)
 	
