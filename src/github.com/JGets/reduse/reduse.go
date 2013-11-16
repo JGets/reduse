@@ -2,7 +2,7 @@ package main
 
 import(
 	"os"
-	"html/template"
+	// "html/template"
 	"log"
 	// "errors"
 	// "bufio"
@@ -29,77 +29,7 @@ var logger *log.Logger
 
 
 
-/*
-	templ = {"template_name":"name_for_template", "template_file":"relative_file_location"}
-	args = template arguments
-*/
-func templatePage(ctx *web.Context, templ map[string]string, args map[string]string){
-	
-	t, err := template.New(templ["template_name"]).ParseFiles(templ["template_file"])
-	
-	if err != nil{
-		logger.Println("ERROR: ", err.Error())
-	}
-	
-	//Check if a base url has been passed in. If not, set it to the default base url
-	_, baseExists := args["base_url"]
-	if !baseExists {
-		args["base_url"] = siteBaseURL
-	}
-	
-	_, appNameExists := args["app_name"]
-	if !appNameExists {
-		args["app_name"] = appName
-	}
-    
-    err = t.Execute(ctx, args)
-    
-    if err != nil{
-		logger.Println("ERROR: ", err.Error())
-	}
-}
 
-
-
-
-
-func home(ctx *web.Context){
-	templatePage(ctx, 
-				 map[string]string{"template_name":"home.html", 
-								   "template_file":"templatePages/home.html",
-								   }, 
-				 map[string]string{})
-}
-
-func error404(ctx *web.Context, url string){
-	bodyStr := "Could not locate \"" + url + "\" on this server"
-	
-	ctx.WriteHeader(404)
-	
-	templatePage(ctx,
-				 map[string]string{"template_name":"error.html",
-				 				   "template_file":"templatePages/error.html",
-				 				   },
-				 map[string]string{"title_text":"404 Page Not Found",
-				 				   "body_text":bodyStr,
-				 				   })
-}
-
-func generate(ctx *web.Context){
-	url := ctx.Params["url"]
-	
-	body := "Generate short url for " + url
-	
-	templatePage(ctx,
-				 map[string]string{"template_name":"generate.html",
-				 				   "template_file":"templatePages/generate.html",
-				 				   },
-				 map[string]string{"title_text":"Generate URL",
-				 				   "body_text":body,
-				 				   })
-	
-	
-}
 
 
 
@@ -145,7 +75,8 @@ func main() {
 	
 	web.Get("/", home)
 	web.Get("/generate/", generate)
-	web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
+	web.Get("/(.+)", serveLink)
+	//web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
 	web.Run(serverAddressWithPort)
 	
 }
