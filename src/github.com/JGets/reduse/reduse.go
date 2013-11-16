@@ -17,10 +17,13 @@ const(
 
 var DEFAULTS = map[string]string {
 								  "app_name":"[APP_NAME]",
-								  "server_address":"0.0.0.0:8080",
+								  "server_address":"",
 								  "base_url":"http://0.0.0.0:8080",
+								  "dev_port":"8080",
+								  "dev_base_url":"http://0.0.0.0:8080/",
 								  }
 
+var devMode bool
 var appName, serverAddress, siteBaseURL string
 var logger *log.Logger
 
@@ -65,9 +68,7 @@ func home(ctx *web.Context){
 				 map[string]string{"template_name":"home.html", 
 								   "template_file":"templatePages/home.html",
 								   }, 
-				 map[string]string{"title_text":"Homepage", 
-				 				   "body_text":"Hello World!",
-				 				   })
+				 map[string]string{})
 }
 
 func error404(ctx *web.Context, url string){
@@ -105,6 +106,14 @@ func generate(ctx *web.Context){
 
 
 func main() {
+	//Get environment variables
+	devStr := os.Getenv("REDUSEDEVELOPMODE")
+	devMode = (devStr == "true")
+	
+	port := os.Getenv("PORT")
+	
+	
+	
 	// logfile, err := os.Create("log.txt")
 	
 	// if err != nil {
@@ -114,9 +123,15 @@ func main() {
 	
 	// logger = log.New(logfile, "", log.Ldate | log.Ltime)
 	
-	logger = log.New(os.Stdout, "", log.Ldate | log.Ltime)
+	logger = log.New(os.Stdout, "", log.Lshortfile)
 	
 	web.SetLogger(logger)
+	
+	
+	if devMode {
+		logger.Println("Running in Develop mode")
+	}
+	
 	
 	started, err := startup()
 	
@@ -125,8 +140,6 @@ func main() {
 		logger.Panic(err)
 		return
 	}
-	
-	port := os.Getenv("PORT")
 	
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	

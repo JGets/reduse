@@ -112,6 +112,12 @@ func checkConfigs(configs map[string]string) error {
 
 func setConfigVars(configs map[string]string) {
 	appName = configs["app_name"]
-	serverAddress = configs["server_address"]
-	siteBaseURL = configs["base_url"]
+	
+	if devMode {
+		serverAddress = configs["dev_server_address"]
+		siteBaseURL = configs["dev_base_url"]
+	} else {
+		serverAddress = configs["server_address"]
+		siteBaseURL = configs["base_url"]
+	}
 }
