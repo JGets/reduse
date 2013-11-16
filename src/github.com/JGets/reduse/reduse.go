@@ -194,14 +194,16 @@ func setConfigVars(configs map[string]string) {
 
 
 func main() {
-	logfile, err := os.Create("log.txt")
+	/*logfile, err := os.Create("log.txt")
 	
 	if err != nil {
 		log.Fatal("Error: Could not open logfile")
 	}
 	
 	
-	logger = log.New(logfile, "", log.Ldate | log.Ltime)
+	logger = log.New(logfile, "", log.Ldate | log.Ltime)*/
+	
+	logger = log.New(os.Stdout, "", log.Ldate | log.Ltime)
 	
 	web.SetLogger(logger)
 	
