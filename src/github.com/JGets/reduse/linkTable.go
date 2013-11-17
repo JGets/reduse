@@ -80,6 +80,12 @@ func (lt *LinkTable) populateLinkTable(file *os.File) error{
 
 
 
+
+func (lt *LinkTable) getTable() (map[string]string){
+	return lt.table
+}
+
+
 func (lt *LinkTable) linkForHash(hash string) (string, bool){
 	val, exists := lt.table[hash]
 	return val, exists

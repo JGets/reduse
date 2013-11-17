@@ -85,6 +85,7 @@ func generate(ctx *web.Context){
 	url := ctx.Params["url"]
 	
 	//TODO: check given url against blacklist
+	//TODO: link validation (ie. make sure it is a valid URL)
 	
 	
 	//link must start with http:// or https://
@@ -138,8 +139,6 @@ func serveLink(ctx *web.Context, hash string){
 	//make the hash all uppercase
 	hash = strings.ToUpper(hash)
 	
-	//TODO
-	//get link from databse & redirect to it
 	
 	link, exists := linkTable.linkForHash(hash)
 	
@@ -150,4 +149,13 @@ func serveLink(ctx *web.Context, hash string){
 		error404(ctx, hash)
 	}
 	
+}
+
+func listLinks() string{
+	var ret = ""
+	for key, val := range linkTable.getTable() {
+		ret += key + " : " + val + "<br/>"
+	}
+	
+	return ret
 }
