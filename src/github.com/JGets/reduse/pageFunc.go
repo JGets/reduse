@@ -5,6 +5,7 @@ import(
 	"crypto/md5"
 	"io"
 	"encoding/base32"
+	"strings"
 	
 	"github.com/hoisie/web"
 )
@@ -67,8 +68,29 @@ func error404(ctx *web.Context, url string){
 				 				   })
 }
 
+func internalError(ctx *web.Context, err error){
+	ctx.WriteHeader(500)
+	
+	templatePage(ctx,
+				 map[string]string{"template_name":"error.html",
+				 				   "template_file":"templatePages/error.html",
+				 				   },
+				 map[string]string{"title_text":"500 Internal Server Error",
+				 				   "body_text":err.Error(),
+				 				   })
+}
+
+
 func generate(ctx *web.Context){
 	url := ctx.Params["url"]
+	
+	//TODO: check given url against blacklist
+	
+	
+	//link must start with http:// or https://
+	if !strings.HasPrefix(url, "http://") || !strings.HasPrefix(url, "https://") {
+		url = "http://" + url
+	}
 	
 	
 	hasher := md5.New()
@@ -81,37 +103,51 @@ func generate(ctx *web.Context){
 	
 	hashStr = hashStr[:5]
 	
-	
-	//TODO
-	//need to save to database & make actual link work
+	//TODO: check for & fix collisions (i.e. make the hash longer until there is no collision)
 	
 	
+	//Save the link to the link table
+	err := linkTable.addLink(hashStr, url)
 	
-	body := "Generate short url for " + url
-	hashText := "Hash: " + hashStr
 	
-	templatePage(ctx,
-				 map[string]string{"template_name":"generate.html",
-				 				   "template_file":"templatePages/generate.html",
-				 				   },
-				 map[string]string{"title_text":"Generate URL",
-				 				   "body_text":body,
-				 				   "hash_text":hashText,
-				 				   })
+	if err != nil {
+		internalError(ctx, err)
+	} else {
+		body := "Generate short url for " + url
+		hashText := "Hash: " + hashStr
+		
+		templatePage(ctx,
+					 map[string]string{"template_name":"generate.html",
+					 				   "template_file":"templatePages/generate.html",
+					 				   },
+					 map[string]string{"title_text":"Generate URL",
+					 				   "body_text":body,
+					 				   "hash_text":hashText,
+					 				   "link_hash":hashStr,
+					 				   })
+	}
+	
+	
+	
+	
 	
 	
 }
 
-func serveLink(ctx *web.Context, identifier string){
-	var invalidLink = true //CHANGE THIS to false (when TODO below is implemented)
+func serveLink(ctx *web.Context, hash string){
+	//make the hash all uppercase
+	hash = strings.ToUpper(hash)
 	
 	//TODO
 	//get link from databse & redirect to it
 	
+	link, exists := linkTable.linkForHash(hash)
 	
-	if invalidLink {
-		error404(ctx, identifier)
+	if exists {
+		//if the hash exists in the link table, issue a '301 Moved Permanently' to the client with the link url
+		ctx.Redirect(301, link)
+	} else {
+		error404(ctx, hash)
 	}
-	
 	
 }

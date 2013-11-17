@@ -29,8 +29,15 @@ func startup() (bool, error){
 		return false, err
 	}
 	
-	
 	setConfigVars(configs)
+	
+	
+	linkTable, err = initLinkTable("reduse_LinkTable.txt")
+	
+	if err != nil {
+		return false, err
+	}
+	
 	
 	return true, nil
 }

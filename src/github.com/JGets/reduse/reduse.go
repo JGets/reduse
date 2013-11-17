@@ -26,10 +26,7 @@ var DEFAULTS = map[string]string {
 var devMode bool
 var appName, serverAddress, siteBaseURL string
 var logger *log.Logger
-
-
-
-
+var linkTable *LinkTable
 
 
 
