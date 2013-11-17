@@ -168,7 +168,7 @@ func serveLink(ctx *web.Context, hash string){
 	
 	if exists {
 		logger.Printf("servering redirect for link: %v", link)
-		//if the hash exists in the link table, issue a '301 Moved Permanently' to the client with the link url
+		//if the hash exists in the link table, issue a '302 Moved Permanently' to the client with the link url
 		ctx.Redirect(302, link)
 		
 	} else {
