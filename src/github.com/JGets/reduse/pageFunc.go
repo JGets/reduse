@@ -6,6 +6,7 @@ import(
 	"io"
 	"encoding/base32"
 	"strings"
+	"errors"
 	
 	"github.com/hoisie/web"
 )
@@ -55,6 +56,9 @@ func home(ctx *web.Context){
 }
 
 func error404(ctx *web.Context, url string){
+	logger.Printf("404 Error for URL: %v\n", url)
+	
+	
 	bodyStr := "Could not locate \"" + url + "\" on this server"
 	
 	ctx.WriteHeader(404)
@@ -69,6 +73,9 @@ func error404(ctx *web.Context, url string){
 }
 
 func internalError(ctx *web.Context, err error){
+	logger.Printf("500 Internal Server Error: %v\n", err.Error())
+	
+	
 	ctx.WriteHeader(500)
 	
 	templatePage(ctx,
@@ -87,35 +94,53 @@ func generate(ctx *web.Context){
 	//TODO: check given url against blacklist
 	//TODO: link validation (ie. make sure it is a valid URL)
 	
+	logger.Printf("Generating for: %v\n", url)
 	
 	//link must start with http:// or https://
-	if !strings.HasPrefix(url, "http://") || !strings.HasPrefix(url, "https://") {
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 		url = "http://" + url
+		
+		logger.Println("URL was missing http://")
 	}
 	
-	
+	//Generate a new MD5 hasher, and has the url
 	hasher := md5.New()
-	
 	io.WriteString(hasher, url)
-	
 	hashBytes := hasher.Sum(nil)
-	
 	hashStr := base32.StdEncoding.EncodeToString(hashBytes)
 	
-	hashStr = hashStr[:5]
 	
-	//TODO: check for & fix collisions (i.e. make the hash longer until there is no collision)
 	
+	//Check for collisions (ie. different links resulting in the same short-hash), and fix them (by making the )
+	var testHash string
+	var collision bool = true
+	for i := 3; i <= len(hashStr) && collision; i++ {
+		testHash = hashStr[:i]
+		val, exists := linkTable.linkForHash(testHash)
+		
+		//If a link does not exist for that hash, OR, a link exists for the hash, but it is the same link, there is no collision
+		if !exists || val == testHash {
+			collision = false
+		}
+	}
+	
+	//if we have hit the maximum length of the hash, and there is still a collision, throw an error
+	if collision {
+		internalError(ctx, errors.New("Could not resolve collision. Hash: " + testHash + "    Link: " + url))
+		return
+	}
+	
+	finalHash := testHash
 	
 	//Save the link to the link table
-	err := linkTable.addLink(hashStr, url)
+	err := linkTable.addLink(finalHash, url)
 	
 	
 	if err != nil {
 		internalError(ctx, err)
+		return
 	} else {
 		body := "Generate short url for " + url
-		hashText := "Hash: " + hashStr
 		
 		templatePage(ctx,
 					 map[string]string{"template_name":"generate.html",
@@ -123,8 +148,7 @@ func generate(ctx *web.Context){
 					 				   },
 					 map[string]string{"title_text":"Generate URL",
 					 				   "body_text":body,
-					 				   "hash_text":hashText,
-					 				   "link_hash":hashStr,
+					 				   "link_hash":finalHash,
 					 				   })
 	}
 	
@@ -137,14 +161,16 @@ func generate(ctx *web.Context){
 
 func serveLink(ctx *web.Context, hash string){
 	//make the hash all uppercase
-	hash = strings.ToUpper(hash)
+	upperHash := strings.ToUpper(hash)
 	
 	
-	link, exists := linkTable.linkForHash(hash)
+	link, exists := linkTable.linkForHash(upperHash)
 	
 	if exists {
+		logger.Printf("servering redirect for link: %v", link)
 		//if the hash exists in the link table, issue a '301 Moved Permanently' to the client with the link url
-		ctx.Redirect(301, link)
+		ctx.Redirect(302, link)
+		
 	} else {
 		error404(ctx, hash)
 	}
