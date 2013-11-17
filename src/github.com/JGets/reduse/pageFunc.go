@@ -94,13 +94,13 @@ func generate(ctx *web.Context){
 	//TODO: check given url against blacklist
 	//TODO: link validation (ie. make sure it is a valid URL)
 	
-	logger.Printf("Generating for: %v\n", url)
+	//logger.Printf("Generating for: %v\n", url)
 	
 	//link must start with http:// or https://
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 		url = "http://" + url
 		
-		logger.Println("URL was missing http://")
+		//logger.Println("URL was missing http://")
 	}
 	
 	//Generate a new MD5 hasher, and has the url
@@ -119,7 +119,7 @@ func generate(ctx *web.Context){
 		val, exists := linkTable.linkForHash(testHash)
 		
 		//If a link does not exist for that hash, OR, a link exists for the hash, but it is the same link, there is no collision
-		if !exists || val == testHash {
+		if !exists || val == url {
 			collision = false
 		}
 	}
