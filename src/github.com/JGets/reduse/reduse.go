@@ -73,13 +73,13 @@ func main() {
 	}
 	
 	
-	err = initDatabase(dbName, dbAddress, dbUsername, dbPassword)
+	// err = initDatabase(dbName, dbAddress, dbUsername, dbPassword)
 	
-	if err != nil {
-		logger.Println("Could not initialize database interface")
-		logger.Panic(err.Error())
-		return
-	}
+	// if err != nil {
+	// 	logger.Println("Could not initialize database interface")
+	// 	logger.Panic(err.Error())
+	// 	return
+	// }
 	
 	
 	
