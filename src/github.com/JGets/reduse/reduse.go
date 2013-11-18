@@ -39,10 +39,10 @@ func main() {
 	
 	port := os.Getenv("PORT")
 	
-	dbName := os.Getenv("REDUSE_DB_NAME")
-	dbAddress := os.Getenv("REDUSE_DB_ADDRESS")
-	dbUsername := os.Getenv("REDUSE_DB_USERNAME")
-	dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
+	// dbName := os.Getenv("REDUSE_DB_NAME")
+	// dbAddress := os.Getenv("REDUSE_DB_ADDRESS")
+	// dbUsername := os.Getenv("REDUSE_DB_USERNAME")
+	// dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
 	
 	
 	// logfile, err := os.Create("log.txt")
