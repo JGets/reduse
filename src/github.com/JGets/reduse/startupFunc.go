@@ -8,10 +8,6 @@ import(
 )
 
 func startup() (bool, error){
-	
-	//TODO
-	//get the server address / base url from user config file
-	
 	configs, err := parseConfigFile()
 	
 	if err != nil {
@@ -30,14 +26,6 @@ func startup() (bool, error){
 	}
 	
 	setConfigVars(configs)
-	
-	
-	linkTable, err = initLinkTable("reduse_LinkTable.txt")
-	
-	if err != nil {
-		return false, err
-	}
-	
 	
 	return true, nil
 }
@@ -78,18 +66,11 @@ func parseConfigFile() (map[string]string, error){
 			}
 		}
 	}
-	
 	return ret, nil
 }
 
 
 func populateDefaults(configs map[string]string) (map[string]string, error){
-	
-	//TO DO
-	// if configs["server_address"] == "" {
-	// 	configs["server_address"] = DEFAULT_SERVER_ADDRESS
-	// }
-	
 	for k, v := range configs {
 		if v == "" {
 			def, inDef := DEFAULTS[k]
@@ -100,26 +81,19 @@ func populateDefaults(configs map[string]string) (map[string]string, error){
 			}
 		}
 	}
-	
-	
 	return configs, nil
 }
 
 
 func checkConfigs(configs map[string]string) error {
-	
 	if !strings.HasSuffix(configs["base_url"], "/") {
 		return errors.New("Error: config base url '" + configs["base_url"] + "' does not end with a backslash '/'")
 	}
-	
-	
 	return nil
-	
 }
 
 func setConfigVars(configs map[string]string) {
 	appName = configs["app_name"]
-	
 	if devMode {
 		serverAddress = configs["dev_server_address"]
 		siteBaseURL = configs["dev_base_url"]
