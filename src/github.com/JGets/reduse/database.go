@@ -4,6 +4,7 @@ import(
 	"errors"
 	// "log"
 	"database/sql"
+	"strings"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -111,7 +112,7 @@ func db_linkForHashHelper(db *sql.DB, hash string) (string, bool, error){
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
-				//If we got an error say there was no row, return that no entry exists for this has, but don't return the error
+				//If we got an error say there was no row, return that no entry exists for this hash, but don't return the error
 				return "", false, nil
 			} else {
 				//any other error, just return an error
@@ -171,4 +172,36 @@ func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 	return nil
 }
 
+/*
+	Checks to see if the given domain is blacklisted (ie. contained in the domain)
+*/
+func db_isDomainBlacklisted(domain string) (bool, error){
+	db, err := openDB()
+	if err != nil {
+		return false, err
+	}
+	defer db.Close()
+	
+	return db_isDomainBlacklistedHelper(db, domain)
+}
+
+func db_isDomainBlacklistedHelper(db *sql.DB, domain string) (bool, error){
+	
+	domain = strings.ToLower(domain)
+	
+	var bd_domain string
+	err := db.QueryRow("SELECT domain FROM domain_blacklist WHERE domain=?", domain).Scan(&bd_domain)
+	
+	if err != nil {
+		if err == sql.ErrNoRows {
+				//If we got an error say there was no row, return that no entry exists for this domain, but don't return the error
+				return false, nil
+			} else {
+				//any other error, just return an error
+				return false, err
+			}
+	}
+	
+	return false, nil
+}
 

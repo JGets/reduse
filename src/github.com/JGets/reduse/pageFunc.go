@@ -7,6 +7,7 @@ import(
 	"encoding/base32"
 	"strings"
 	"errors"
+	"net/url"
 	
 	"github.com/hoisie/web"
 )
@@ -46,11 +47,11 @@ func home(ctx *web.Context){
 				 map[string]string{})
 }
 
-func error404(ctx *web.Context, url string){
-	logger.Printf("404 Error for URL: %v\n", url)
+func error404(ctx *web.Context, urlStr string){
+	logger.Printf("404 Error for URL: %v\n", urlStr)
 	
 	
-	bodyStr := "Could not locate \"" + url + "\" on this server"
+	bodyStr := "Could not locate \"" + urlStr + "\" on this server"
 	
 	ctx.WriteHeader(404)
 	
@@ -77,9 +78,21 @@ func internalError(ctx *web.Context, err error){
 }
 
 
-func dbTest(url string) string{
+func blacklistedPage(ctx *web.Context, urlStr string){
+	bodyStr := "A link cannot be generated for \"" + urlStr + "\" because that domain has been blacklisted."
+	templatePage(ctx,
+				 map[string]string{"template_name":"blacklisted.html",
+				 				   "template_file":"templatePages/blacklisted.html",
+				 				   },
+				 map[string]string{"title_text":"Blacklisted URL",
+				 				   "body_text":bodyStr,
+				 				   })
+}
+
+
+func dbTest(urlStr string) string{
 	//make the hash all uppercase
-	upperHash := strings.ToUpper(url)
+	upperHash := strings.ToUpper(urlStr)
 	
 	link, exists, err := db_linkForHash(upperHash)
 	
@@ -94,20 +107,53 @@ func dbTest(url string) string{
 }
 
 
-func generate(ctx *web.Context){
-	url := ctx.Params["url"]
+func isBlacklisted(urlStr string) (bool, error) {
+	u, err := url.Parse(urlStr)
 	
-	//TODO: check given url against blacklist
-	//TODO: link validation (ie. make sure it is a valid URL)
-	
-	//link must start with http:// or https://
-	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		url = "http://" + url
+	if err != nil {
+		return false, err
 	}
 	
-	//Generate a new MD5 hasher, and hash the url
+	host := u.Host
+	
+	logger.Println("Host: "+host)
+	
+	
+	
+	return false, nil
+}
+
+
+func generate(ctx *web.Context){
+	urlStr := ctx.Params["url"]
+	
+	//TODO: link validation (ie. make sure it is a valid URL)
+	
+	
+	
+	//link must start with http:// or https://
+	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
+		urlStr = "http://" + urlStr
+	}
+	
+	
+	//Check the domain against the blacklist
+	blacklisted, err := isBlacklisted(urlStr)
+	if err != nil {
+		internalError(ctx, errors.New("Could not check URL against blacklist. ~ " + err.Error()))
+		return
+	} else if blacklisted {
+		blacklistedPage(ctx, urlStr)
+		return
+	}
+	
+	
+	
+	
+	
+	//Generate a new MD5 hasher, and hash the urlStr
 	hasher := md5.New()
-	io.WriteString(hasher, url)
+	io.WriteString(hasher, urlStr)
 	hashBytes := hasher.Sum(nil)
 	hashStr := base32.StdEncoding.EncodeToString(hashBytes)
 	
@@ -128,7 +174,7 @@ func generate(ctx *web.Context){
 		if !exists {
 			//No link exists for this short hash, so there is no collision
 			collision = false
-		} else if val == url {
+		} else if val == urlStr {
 			//This short has is used already, but for the same URL
 			collision = false
 			alreadyExists = true
@@ -137,7 +183,7 @@ func generate(ctx *web.Context){
 	
 	//if we have hit the maximum length of the hash, and there is still a collision, throw an error
 	if collision {
-		internalError(ctx, errors.New("Could not resolve collision. Hash: " + hashStr + "    Link: " + url))
+		internalError(ctx, errors.New("Could not resolve collision. Hash: " + hashStr + "    Link: " + urlStr))
 		return
 	}
 	
@@ -146,7 +192,7 @@ func generate(ctx *web.Context){
 	//if the link did not already exist (Optimization: db_addLink checks this too, but we've already done it here, so why do it again?)
 	if !alreadyExists {
 		//Save the link to the link table
-		err := db_addLink(finalHash, url)
+		err := db_addLink(finalHash, urlStr)
 		
 		if err != nil {
 			internalError(ctx, errors.New("Database Error: could not add link to database. \""+err.Error()+"\""))
@@ -155,7 +201,7 @@ func generate(ctx *web.Context){
 		
 	}
 	
-	body := "Generate short url for " + url
+	body := "Generate short link for " + urlStr
 	
 	templatePage(ctx,
 				 map[string]string{"template_name":"generate.html",
@@ -178,7 +224,7 @@ func serveLink(ctx *web.Context, hash string){
 		//There was an error in the database
 		internalError(ctx, errors.New("Database Error: "+err.Error()))
 	} else if exists {
-		//if the hash exists in the link table, issue a '302 Moved Permanently' to the client with the link url
+		//if the hash exists in the link table, issue a '302 Moved Permanently' to the client with the link URL
 		ctx.Redirect(302, link)	
 	} else {
 		//No link exists for the hash, so serve a 404
