@@ -39,7 +39,10 @@ func main() {
 	
 	port := os.Getenv("PORT")
 	
-	
+	dbName := os.Getenv("REDUSE_DB_NAME")
+	dbAddress := os.Getenv("REDUSE_DB_ADDRESS")
+	dbUsername := os.Getenv("REDUSE_DB_USERNAME")
+	dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
 	
 	
 	// logfile, err := os.Create("log.txt")
@@ -69,7 +72,15 @@ func main() {
 		return
 	}
 	
-	logger.Printf(os.Getenv("REDUSE_DB_PASSWORD"))
+	
+	err = initDatabase(dbName, dbAddress, dbUsername, dbPassword)
+	
+	if err != nil {
+		logger.Println("Could not initialize database interface")
+		logger.Panic(err.Error())
+		return
+	}
+	
 	
 	
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
