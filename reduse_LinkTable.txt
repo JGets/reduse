@@ -1,0 +1,2 @@
+POF	http://google.ca
+AS2	http://www.google.ca/imgres?sa=X&biw=1680&bih=953&tbm=isch&tbnid=UMb3vqLVBOsARM:&imgrefurl=http://thehellopledge.com/take-the-hello-pledge/&docid=785zMm90AJLyGM&imgurl=http://hellopledge.files.wordpress.com/2012/07/hello_medium-file3.jpg&w=1846&h=1029&ei=OzWJUtmECoff2AXOn4CwCw&zoom=1&ved=1t:3588,r:0,s:0,i:88&iact=rc&page=1&tbnh=167&tbnw=300&start=0&ndsp=27&tx=223&ty=56

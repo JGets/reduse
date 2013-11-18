@@ -109,6 +109,7 @@ func generate(ctx *web.Context){
 	hashBytes := hasher.Sum(nil)
 	hashStr := base32.StdEncoding.EncodeToString(hashBytes)
 	
+	logger.Printf("len(hashStr)=%v\n%v", len(hashStr), hashStr)
 	
 	
 	//Check for collisions (ie. different links resulting in the same short-hash), and fix them (by making the )

@@ -41,6 +41,7 @@ func main() {
 	
 	
 	
+	
 	// logfile, err := os.Create("log.txt")
 	
 	// if err != nil {
@@ -67,6 +68,9 @@ func main() {
 		logger.Panic(err)
 		return
 	}
+	
+	logger.Printf(os.Getenv("REDUSE_DB_PASSWORD"))
+	
 	
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
