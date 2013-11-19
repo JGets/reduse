@@ -12,6 +12,13 @@
 			<h1>{{.title_text}}</h1>
 			{{.body_text}}<br/>
 			<br/>
+			{{if .url_empty}}
+				You must give a non-empty URL
+			{{end}}
+			{{if .url_empty_host}}
+				The URL you gave does not appear to have a host.<br/>
+				(Ex: http://<strong>en.wikipedia.org</strong>/wiki/Uniform_resource_locator)
+			{{end}}
 			{{if .url_not_absolute}}
 				The URL you gave was not an absolute URL.<br/>
 				Redu.se only works with absolute URLs.

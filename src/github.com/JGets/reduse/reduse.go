@@ -43,14 +43,15 @@ func main() {
 	dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
 	
 	
-	agent := gorelic.NewAgent()
-	agent.Verbose = true
-	agent.NewrelicLicense = os.Getenv("REDUSE_NEWRELIC_LICENSE_KEY")
-	agent.NewrelicName = "Redu.se"
-	agent.Run()
 	
-	
-	
+	if !devMode {
+		//Set up the NewRelic agent
+		agent := gorelic.NewAgent()
+		agent.Verbose = true
+		agent.NewrelicLicense = os.Getenv("REDUSE_NEWRELIC_LICENSE_KEY")
+		agent.NewrelicName = "Redu.se"
+		agent.Run()
+	}
 	
 	// logfile, err := os.Create("log.txt")
 	// if err != nil {
@@ -84,16 +85,20 @@ func main() {
 	
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
+	
 	web.Get("/", home)
-	web.Get("/generate/", generate)
+	web.Post("/generate/", generate)
 	// web.Get("/list/", listLinks)
 	// web.Get("/test/(.+)", dbTest)
+	web.Get("/captcha/img/(.+)", serveCaptcha)
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	//web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
 	web.Run(serverAddressWithPort)
 	
 }
+
+
 
 
 

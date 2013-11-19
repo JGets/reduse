@@ -6,6 +6,25 @@
 		</title>
 		<base href="{{.base_url}}" />
 		<link rel="stylesheet" type="text/css" href="styles.css">
+		<script type="text/javascript">
+			function validate(){
+				var urlField = document.getElementById("url")
+				var url = urlField.value
+				
+				if(url.indexOf("http://") != 0 && url.indexOf("https://") != 0){
+					urlField.value = "http://" + url
+					alert("prepended 'http://' to URL")
+				}
+				else {
+					alert("No need to modify URL")
+				}
+				
+				
+				document.getElementById("shorten_form").submit()
+				
+				return
+			}
+		</script>
 	</head>
 	<body>
 		<div class="wrapper">
@@ -17,12 +36,18 @@
 		<br/><br/><br/>
 		<div>
 			Redu.se your url:
-			<form action="/generate/" method="GET">
-				<input id="url" name="url" type="text" /><br/>
-				<input type="submit" />
+			<form id="shorten_form" action="/generate/" method="POST">
+				<input id="url" name="url" type="text" autocomplete="off" style="width:300px; height:20px; font-size:14pt;" /><br/><br/>
+				Please prove you're human:<br/>
+				<img src="{{.base_url}}captcha/img/{{.captcha_id}}" /><br/>
+				<input id="captcha_soln" name="captcha_soln" type="text" /><br/><br/>
+				<!-- <input type="submit" /> -->
+				<input type="button" value="Submit" onclick="validate()" />
+				<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 			</form>
 		</div>
-		<!--Note: All links are public, and can be viewed <a href="/list/">here</a>-->
+		
+		<!-- Note: All links are public, and can be viewed <a href="/list/">here</a> -->
 		<br/><br/><br/>
 		Redu.se is open source, check it out <a href="https://github.com/JGets/reduse">here</a>
 		<br/><br/><br/>
