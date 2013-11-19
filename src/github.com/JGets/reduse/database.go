@@ -9,6 +9,18 @@ import(
 
 var dsn string
 
+/*
+	Initializes Database information & test for connectivity
+	Note: will return an error if a connection to the database cannot be established
+	
+	Parameters:
+		dbname:		The name of the database
+		address:	The address of the database
+		username:	The username to use with the database
+		password:	The password to use with the database
+	Returns:
+		error:		Any error that was encountered
+*/
 func initDatabase(dbname, address, username, password string) error {
 	//Set up the DSN (Data Source Name) for the database
 	dsn = username + ":" + password + "@(" + address + ":3306)/" + dbname
@@ -20,21 +32,25 @@ func initDatabase(dbname, address, username, password string) error {
 	}
 	defer db.Close()
 	
-	logger.Println("db opened")
+	logger.Println("Database opened successfully")
 	
 	//validate the database connection
 	err = db.Ping()
-	
 	if err != nil{
 		return err
 	} else {
 		logger.Println("Database connection validated")
 	}
 	
-	
 	return nil
 }
 
+/*
+	Opens an interface to the database
+	Returns:
+		*sql.DB:	A pointer to the database interface, or nil if an error was encountered
+		error:		Any error that was encountered, or nil
+*/
 func openDB() (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -104,7 +120,18 @@ func db_linkForHash(hash string) (string, bool, error){
 	return db_linkForHashHelper(db, hash)
 }
 
-
+/*
+	Get the link for a given hash from the given database interface.
+	NOTE: Check for non-nil returned error BEFORE checking the boolean 'exists' return value
+	
+	Parameters:
+		db:		A pointer to the database interface to use
+		hash:	The hash that we are to look for in the DB
+	Returns:
+		string: The link, or an empty string (if there is no entry for the has in the DB, or an error was encountered)
+		bool:	false only when there is no row for that hash in the DB, true otherwise (Note: is true even when an error is encountered)
+		error:	Any error that was encountered, or nil
+*/
 func db_linkForHashHelper(db *sql.DB, hash string) (string, bool, error){
 	var link string
 	err := db.QueryRow("SELECT link FROM links WHERE hash=?", hash).Scan(&link)
@@ -141,6 +168,16 @@ func db_addLink(hash, url string) error {
 	return db_addLinkHelper(db, hash, url)
 }
 
+/*
+	Add a link to the given database.
+	
+	Parameters:
+		db:		A pointer to the database to add to
+		hash:	The short-hash of the link to be added to the DB
+		url:	The URL that the link is to redirect to
+	Returns:
+		error:	Any error that was encountered, or nil
+*/
 func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 	//Check to make sure we aren't trying to add a conflicting link row to the database
 	exLink, exists, err := db_linkForHashHelper(db, hash)
@@ -173,36 +210,36 @@ func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 	return nil
 }
 
-/*
-	Checks to see if the given domain is blacklisted (ie. contained in the domain)
-*/
-func db_isDomainBlacklisted(domain string) (bool, error){
-	db, err := openDB()
-	if err != nil {
-		return false, err
-	}
-	defer db.Close()
-	
-	return db_isDomainBlacklistedHelper(db, domain)
-}
-
-func db_isDomainBlacklistedHelper(db *sql.DB, domain string) (bool, error){
-	
-	domain = strings.ToLower(domain)
-	
-	var bd_domain string
-	err := db.QueryRow("SELECT domain FROM domain_blacklist WHERE domain=?", domain).Scan(&bd_domain)
-	
-	if err != nil {
-		if err == sql.ErrNoRows {
-				//If we got an error say there was no row, return that no entry exists for this domain, but don't return the error
-				return false, nil
-			} else {
-				//any other error, just return an error
-				return false, err
-			}
-	}
-	
-	return false, nil
-}
+// /*
+// 	Checks to see if the given domain is blacklisted (ie. contained in the domain table)
+// */
+// func db_isDomainBlacklisted(domain string) (bool, error){
+// 	db, err := openDB()
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	defer db.Close()
+//	
+// 	return db_isDomainBlacklistedHelper(db, domain)
+// }
+//
+// func db_isDomainBlacklistedHelper(db *sql.DB, domain string) (bool, error){
+//	
+// 	domain = strings.ToLower(domain)
+//	
+// 	var bd_domain string
+// 	err := db.QueryRow("SELECT domain FROM domain_blacklist WHERE domain=?", domain).Scan(&bd_domain)
+//	
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 				//If we got an error say there was no row, return that no entry exists for this domain, but don't return the error
+// 				return false, nil
+// 			} else {
+// 				//any other error, just return an error
+// 				return false, err
+// 			}
+// 	}
+//	
+// 	return false, nil
+// }
 

@@ -23,6 +23,7 @@ var DEFAULTS = map[string]string {
 								  "dev_base_url":"http://0.0.0.0:8080/",
 								  }
 
+//Global app variables
 var devMode bool
 var appName, serverAddress, siteBaseURL string
 var logger *log.Logger
@@ -33,8 +34,9 @@ func main() {
 	devStr := os.Getenv("REDUSEDEVELOPMODE")
 	devMode = (devStr == "true")
 	
-	port := os.Getenv("PORT")
+	port := os.Getenv("PORT")	//get the port that we are to run off of
 	
+	//get the database information from the environment
 	dbName := os.Getenv("REDUSE_DB_NAME")
 	dbAddress := os.Getenv("REDUSE_DB_ADDRESS")
 	dbUsername := os.Getenv("REDUSE_DB_USERNAME")
@@ -42,22 +44,9 @@ func main() {
 	
 	
 	
-	if !devMode {
-		//Set up the NewRelic agent
-		agent := gorelic.NewAgent()
-		agent.Verbose = true
-		agent.NewrelicLicense = os.Getenv("REDUSE_NEWRELIC_LICENSE_KEY")
-		agent.NewrelicName = "Redu.se"
-		agent.Run()
-	}
 	
-	// logfile, err := os.Create("log.txt")
-	// if err != nil {
-	// 	log.Fatal("Error: Could not open logfile")
-	// }
-	
+	//Set up logging to stdout
 	logger = log.New(os.Stdout, "", log.Lshortfile)
-	
 	web.SetLogger(logger)
 	
 	if devMode {
@@ -80,20 +69,26 @@ func main() {
 		return
 	}
 	
+	//Past this point, we should not have any panic()'s, rather any and all errors should be handled gracefully
+	
+	//don't do any of this stuff if we are in development mode (ie. production-only initialization goes here)
+	if !devMode {
+		//Set up the NewRelic agent
+		agent := gorelic.NewAgent()
+		agent.Verbose = true
+		agent.NewrelicLicense = os.Getenv("REDUSE_NEWRELIC_LICENSE_KEY")
+		agent.NewrelicName = "Redu.se"
+		agent.Run()
+	}
 	
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
-	
 	web.Get("/", home)
 	web.Post("/generate/", generate)
-	// web.Get("/list/", listLinks)
-	// web.Get("/test/(.+)", dbTest)
 	web.Get("/captcha/img/(.+)", serveCaptcha)
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
-	//web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
 	web.Run(serverAddressWithPort)
-	
 }
 
 
