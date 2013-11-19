@@ -301,8 +301,7 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 	//make the hash all uppercase
 	upperHash := strings.ToUpper(hash)
 	
-	logger.Printf("hash: %v\n", hash)
-	logger.Printf("extras: %v\n", extras)
+	
 	
 	//Check to see if a link exists for the given hash
 	link, exists, err := db_linkForHash(upperHash)
@@ -312,8 +311,19 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 	} else if exists {
 		redir := link
 		
+		//If there were any URL extras passed to us, append them to the redir link
 		if extras != "" {
 			redir += "/" + extras
+		}
+		
+		//If there are any GET parameters being passed to us, append them to the redir link
+		if len(ctx.Params) > 0 {
+			params := "?"
+			for k, v := range ctx.Params {
+				params += k + "=" + v + "&"
+			}
+			//remove the trailing ampersand and append to the redir link
+			redir += strings.TrimSuffix(params, "&")
 		}
 		
 		//if the hash exists in the link table, issue a '302 Moved Permanently' to the client with the link URL
