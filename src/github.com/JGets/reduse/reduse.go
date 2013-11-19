@@ -2,11 +2,7 @@ package main
 
 import(
 	"os"
-	// "html/template"
 	"log"
-	// "errors"
-	// "bufio"
-	// "strings"
 	
 	"github.com/hoisie/web"			/* http://webgo.io */
 	"github.com/yvasiyarov/gorelic"
