@@ -169,6 +169,8 @@ func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 		return err
 	}
 	
+	logger.Printf("Added %v => %v to DB\n", hash, url)
+	
 	return nil
 }
 

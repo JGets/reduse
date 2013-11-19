@@ -12,6 +12,12 @@ import(
 	"github.com/hoisie/web"
 )
 
+const(
+	URL_NOT_ABSOLUTE = "URL_NOT_ABSOLUTE"
+	URL_INVALID_SCHEME = "URL_INVALID_SCHEME"
+	URL_VALIDATED_INEQUIVALENT = "URL_VALIDATED_INEQUIVALENT"
+)
+
 
 func templatePage(ctx *web.Context, templ map[string]string, args map[string]string){
 	
@@ -90,6 +96,35 @@ func blacklistedPage(ctx *web.Context, urlStr string){
 }
 
 
+func invalidURLPage(ctx *web.Context, reason string) {
+	
+	params := make(map[string]string)
+	
+	
+	params["title_text"] = "Invalid URL"
+	params["body_text"] = "The given URL to shorten was invalid."
+	
+
+	switch reason {
+		case URL_NOT_ABSOLUTE:
+			params["url_not_absolute"] = "true"
+		case URL_INVALID_SCHEME:
+			params["url_invalid_scheme"] = "true"
+		case URL_VALIDATED_INEQUIVALENT:
+			params["url_validated_inequivalent"] = "true"
+	}
+	
+	
+	
+	templatePage(ctx,
+				 map[string]string{"template_name":"invalidURL.html",
+				 				   "template_file":"templatePages/invalidURL.html",
+				 				   },
+				 params)
+}
+
+
+
 func dbTest(urlStr string) string{
 	//make the hash all uppercase
 	upperHash := strings.ToUpper(urlStr)
@@ -124,30 +159,75 @@ func isBlacklisted(urlStr string) (bool, error) {
 }
 
 
+/*
+	Validates a URL - ie. checks to make sure it is valid (absolute, uses http or https scheme, etc)
+	Parameters:
+		urlStr:	The URL (in a string) that is to be validated
+	Returns:
+		string:	A valid URL that is equivalent to the given one, or a message as to why the URL is invalid (when bool = false), 
+					or nil (if an error was encountered)
+		bool:	true if the URL is can be validated, false otherwise (including when an error occurs)
+		error:	Any error that was encounterd, or nil
+*/
+func validateURL(urlStr string) (string, bool, error){
+	//Parse the URL
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return "", false, err
+	}
+	
+	
+	//Check to make sure it is using a vaild scheme (http or https)
+	var needsScheme = false
+	if u.Scheme == "" {
+		needsScheme = true
+		u.Scheme = "http"
+	} else if u.Scheme != "http" && u.Scheme != "https" {
+		return URL_INVALID_SCHEME, false, nil
+	}
+	
+	//Check if the URL is not absolute (relative URLs would not work anyways)
+	if !u.IsAbs() {
+		return URL_NOT_ABSOLUTE, false, nil
+	}
+	
+	//Check to make sure the validated URL is equivalent to the given one
+	validStr := u.String()
+	if needsScheme {
+		urlStr = "http://" + urlStr
+	}
+	if validStr != urlStr {
+		return URL_VALIDATED_INEQUIVALENT, false, nil
+	}
+	
+	return validStr, true, nil
+}
+
+
 func generate(ctx *web.Context){
 	urlStr := ctx.Params["url"]
 	
-	//TODO: link validation (ie. make sure it is a valid URL)
-	
-	
-	
-	//link must start with http:// or https://
-	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
-		urlStr = "http://" + urlStr
-	}
-	
-	
-	//Check the domain against the blacklist
-	blacklisted, err := isBlacklisted(urlStr)
+	//Check to make sure we were given a valid URL
+	validURL, isValid, err := validateURL(urlStr)
 	if err != nil {
-		internalError(ctx, errors.New("Could not check URL against blacklist. ~ " + err.Error()))
+		internalError(ctx, errors.New("Error validating URL: "+err.Error()))
 		return
-	} else if blacklisted {
-		blacklistedPage(ctx, urlStr)
+	} else if !isValid {
+		invalidURLPage(ctx, validURL)
 		return
 	}
+	urlStr = validURL
 	
 	
+	//TODO: Check the domain against the blacklist
+	// blacklisted, err := isBlacklisted(urlStr)
+	// if err != nil {
+	// 	internalError(ctx, errors.New("Could not check URL against blacklist. ~ " + err.Error()))
+	// 	return
+	// } else if blacklisted {
+	// 	blacklistedPage(ctx, urlStr)
+	// 	return
+	// }
 	
 	
 	
@@ -162,10 +242,11 @@ func generate(ctx *web.Context){
 	var testHash string
 	var collision bool = true
 	var alreadyExists = false
-	for i := 3; i <= len(hashStr) && collision; i++ {
+	for i := LINK_START_LENGTH; i <= len(hashStr) && collision; i++ {
 		testHash = hashStr[:i]
-		val, exists, err := db_linkForHash(testHash)
 		
+		//Check if this shorthash already exists in the database
+		val, exists, err := db_linkForHash(testHash)
 		if err != nil {
 			internalError(ctx, errors.New("Database Error: "+err.Error()))
 			return
@@ -179,6 +260,7 @@ func generate(ctx *web.Context){
 			collision = false
 			alreadyExists = true
 		}
+		//otherwise, there was a collision, so check the short-hash of one char longer
 	}
 	
 	//if we have hit the maximum length of the hash, and there is still a collision, throw an error
@@ -193,16 +275,14 @@ func generate(ctx *web.Context){
 	if !alreadyExists {
 		//Save the link to the link table
 		err := db_addLink(finalHash, urlStr)
-		
 		if err != nil {
 			internalError(ctx, errors.New("Database Error: could not add link to database. \""+err.Error()+"\""))
 			return
 		}
-		
 	}
 	
+	//Give user output webpage
 	body := "Generate short link for " + urlStr
-	
 	templatePage(ctx,
 				 map[string]string{"template_name":"generate.html",
 				 				   "template_file":"templatePages/generate.html",

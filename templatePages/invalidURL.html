@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			{{.title_text}}
+		</title>
+		<base href="{{.base_url}}" />
+		<link rel="stylesheet" type="text/css" href="styles.css">
+	</head>
+	<body>
+		<div class="wrapper">
+			<h1>{{.title_text}}</h1>
+			{{.body_text}}<br/>
+			<br/>
+			{{if .url_not_absolute}}
+				The URL you gave was not an absolute URL.<br/>
+				Redu.se only works with absolute URLs.
+			{{end}}
+			{{if .url_invalid_scheme}}
+				The URL you gave used an invalid scheme.<br/>
+				Only <em>http://</em> and <em>https://</em> schemes are valid to use with Redu.se
+			{{end}}
+			{{if .url_validated_inequivalent}}
+				The URL you gave could not be parsed to a valid URL
+			{{end}}
+		</div>
+		<br/><br/>
+		<br/><br/>
+		<a href="/">Home</a>
+	</body>
+</html>

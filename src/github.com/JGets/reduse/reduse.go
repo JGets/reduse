@@ -13,6 +13,7 @@ import(
 
 const(
 	CONFIG_FILE_NAME = "config.txt"
+	LINK_START_LENGTH = 5
 )
 
 var DEFAULTS = map[string]string {
@@ -81,3 +82,6 @@ func main() {
 	web.Run(serverAddressWithPort)
 	
 }
+
+
+
