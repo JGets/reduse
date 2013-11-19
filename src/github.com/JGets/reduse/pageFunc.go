@@ -9,6 +9,7 @@ import(
 	"errors"
 	"net/url"
 	// "net/http"
+	"math/rand"
 	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
@@ -51,7 +52,8 @@ func templatePage(ctx *web.Context, templ map[string]string, args map[string]str
 
 func home(ctx *web.Context){
 	
-	captchaId := captcha.New()
+	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGNTH + CAPTCHA_VARIANCE]
+	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 	
 	
 	templatePage(ctx, 

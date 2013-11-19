@@ -15,6 +15,8 @@ import(
 const(
 	CONFIG_FILE_NAME = "config.txt"
 	LINK_START_LENGTH = 5
+	CAPTCHA_MIN_LENGTH = 6
+	CAPTCHA_VARIANCE = 2	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGNTH + CAPTCHA_VARIANCE]
 )
 
 var DEFAULTS = map[string]string {
