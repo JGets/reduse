@@ -8,7 +8,7 @@ import(
 	"strings"
 	"errors"
 	"net/url"
-	// "net/http"
+	"net/http"
 	"math/rand"
 	
 	"github.com/hoisie/web"
@@ -21,6 +21,7 @@ const(
 	URL_NOT_ABSOLUTE = "URL_NOT_ABSOLUTE"
 	URL_INVALID_SCHEME = "URL_INVALID_SCHEME"
 	URL_VALIDATED_INEQUIVALENT = "URL_VALIDATED_INEQUIVALENT"
+	URL_DOES_NOT_EXIST = "URL_DOES_NOT_EXIST"
 )
 
 
@@ -137,6 +138,8 @@ func invalidURLPage(ctx *web.Context, reason string) {
 			params["url_invalid_scheme"] = "true"
 		case URL_VALIDATED_INEQUIVALENT:
 			params["url_validated_inequivalent"] = "true"
+		case URL_DOES_NOT_EXIST:
+			params["url_does_not_exist"] = "true"
 	}
 	
 	
@@ -206,19 +209,13 @@ func validateURL(urlStr string) (string, bool, error){
 		return "", false, err
 	}
 	
-	logger.Printf("%v has host: %v\n", urlStr, u.Host)
-	
 	//check to make sure the URL contains a host
 	if u.Host == ""{
 		return URL_EMPTY_HOST, false, nil
 	}
 	
 	//Check to make sure it is using a vaild scheme (http or https)
-	var needsScheme = false
-	/*if u.Scheme == "" {
-		needsScheme = true
-		u.Scheme = "http"
-	} else*/ if u.Scheme != "http" && u.Scheme != "https" {
+	if u.Scheme != "http" && u.Scheme != "https" {
 		return URL_INVALID_SCHEME, false, nil
 	}
 	
@@ -229,9 +226,6 @@ func validateURL(urlStr string) (string, bool, error){
 	
 	//Check to make sure the validated URL is equivalent to the given one
 	validStr := u.String()
-	if needsScheme {
-		urlStr = "http://" + urlStr
-	}
 	if validStr != urlStr {
 		return URL_VALIDATED_INEQUIVALENT, false, nil
 	}
@@ -292,17 +286,18 @@ func generate(ctx *web.Context){
 	urlStr = validURL
 	
 	
-	//Check if the URL actually goes somewhere
+	//Check if the URL actually exists (ie. it points to a real webserver)
+	resp, err := http.Get(urlStr)
+	if err != nil {
+		invalidURLPage(ctx, URL_DOES_NOT_EXIST)
+		return
+	}
+	defer resp.Body.Close()
 	
-	// resp, err := http.Get(urlStr)
-	// if err != nil {
-		
-	// }
-	// if 
-	
-	
-	
-	
+	if resp.StatusCode != http.StatusOK {
+		invalidURLPage(ctx, URL_DOES_NOT_EXIST)
+		return
+	}
 	
 	
 	//TODO: Check the domain against the blacklist

@@ -30,6 +30,9 @@
 			{{if .url_validated_inequivalent}}
 				The URL you gave could not be parsed to a valid URL
 			{{end}}
+			{{if .url_does_not_exist}}
+				We could not verify the existence of the URL you gave.
+			{{end}}
 		</div>
 		<br/><br/>
 		<br/><br/>
