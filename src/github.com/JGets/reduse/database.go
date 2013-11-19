@@ -3,7 +3,7 @@ package main
 import(
 	"errors"
 	"database/sql"
-	"strings"
+	// "strings"
 	_ "github.com/go-sql-driver/mysql"
 )
 
