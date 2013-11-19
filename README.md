@@ -10,7 +10,7 @@ Redu.se is written entirely in the [Go](http://golang.org) programming language,
 
 It uses a MySQL database back-end to store the short links and their URL destinations.
 
-Currently, no click statistics a kept, but this is planned to be implemented in the future. However, if and when any statistics are gathered, it will be completely anonymous, and available to the public (statistics for specific links will __not__ be gathered, but information link the number of short links used per day will be gathered).
+Currently, no click statistics are kept, but this is planned to be implemented in the future. However, if and when any statistics are gathered, it will be completely anonymous, and available to the public (statistics for specific links will __not__ be gathered, but information link the number of short links used per day will be gathered).
 
 ##Overview
 Redu.se can be used to shorten any URL that uses a <code>http://</code>, <code>https://</code>, or <code>mailto:</code> [scheme](http://en.wikipedia.org/wiki/URI_scheme). It requires that the user solve a [CAPTCHA](http://en.wikipedia.org/wiki/CAPTCHA) for every short link they wish to generate, as to dissuade abuse of the service, and prevent spamming & bots from filling the database.
