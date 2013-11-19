@@ -9,6 +9,7 @@ import(
 	// "strings"
 	
 	"github.com/hoisie/web"			/* http://webgo.io */
+	"github.com/yvasiyarov/gorelic"
 )
 
 const(
@@ -40,6 +41,15 @@ func main() {
 	dbAddress := os.Getenv("REDUSE_DB_ADDRESS")
 	dbUsername := os.Getenv("REDUSE_DB_USERNAME")
 	dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
+	
+	
+	agent := gorelic.NewAgent()
+	agent.Verbose = true
+	agent.NewrelicLicense = os.Getenv("REDUSE_NEWRELIC_LICENSE_KEY")
+	agent.Run()
+	
+	
+	
 	
 	// logfile, err := os.Create("log.txt")
 	// if err != nil {
