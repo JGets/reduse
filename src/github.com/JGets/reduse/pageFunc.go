@@ -8,7 +8,7 @@ import(
 	"strings"
 	"errors"
 	"net/url"
-	"net/http"
+	// "net/http"
 	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
