@@ -77,6 +77,7 @@ func main() {
 	web.Get("/generate/", generate)
 	// web.Get("/list/", listLinks)
 	// web.Get("/test/(.+)", dbTest)
+	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	//web.Get("/(.+)", error404)	//Catch any other URL as unrecognized (regex '(.+)' = any single character 1 or more times)
 	web.Run(serverAddressWithPort)

@@ -294,18 +294,30 @@ func generate(ctx *web.Context){
 }
 
 func serveLink(ctx *web.Context, hash string){
+	serveLinkWithExtras(ctx, hash, "")
+}
+
+func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 	//make the hash all uppercase
 	upperHash := strings.ToUpper(hash)
 	
+	logger.Printf("hash: %v\n", hash)
+	logger.Printf("extras: %v\n", extras)
+	
 	//Check to see if a link exists for the given hash
 	link, exists, err := db_linkForHash(upperHash)
-	
 	if err != nil {
 		//There was an error in the database
 		internalError(ctx, errors.New("Database Error: "+err.Error()))
 	} else if exists {
+		redir := link
+		
+		if extras != "" {
+			redir += "/" + extras
+		}
+		
 		//if the hash exists in the link table, issue a '302 Moved Permanently' to the client with the link URL
-		ctx.Redirect(302, link)	
+		ctx.Redirect(302, redir)	
 	} else {
 		//No link exists for the hash, so serve a 404
 		error404(ctx, hash)
