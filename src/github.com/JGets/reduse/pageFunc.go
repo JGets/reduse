@@ -84,13 +84,29 @@ func home(ctx *web.Context){
 		ctx:	The context of the http request
 		id:		The ID of the captcha to serve
 */
-func serveCaptcha(ctx *web.Context, id string){
+func serveCaptchaImage(ctx *web.Context, id string){
 	err := captcha.WriteImage(ctx, id, captcha.StdWidth, captcha.StdHeight)
 	if err != nil {
 		logger.Println("Error, could not write CAPTCHA image")
 		logger.Println(err.Error())
 	}
 }
+
+
+func reloadCaptchaImage(ctx *web.Context, id string){
+	exists := captcha.Reload(id)
+	if !exists {
+		logger.Println("Error, trying to reload non-existent CAPTCHA")
+	}
+	
+	err := captcha.WriteImage(ctx, id, captcha.StdWidth, captcha.StdHeight)
+	if err != nil {
+		logger.Println("Error, could not write CAPTCHA image\n" + err.Error())
+	}
+}
+
+
+
 
 /*
 	Serve a 404 Not Found error page
