@@ -11,7 +11,7 @@
 				var urlField = document.getElementById("url")
 				var url = urlField.value
 				
-				if(url.indexOf("http://") != 0 && url.indexOf("https://") != 0){
+				if(!(url.indexOf("http://") == 0 || url.indexOf("https://") == 0 || url.indexOf("mailto:") == 0)){
 					urlField.value = "http://" + url
 				}
 				

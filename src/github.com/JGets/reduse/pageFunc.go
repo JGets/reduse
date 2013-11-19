@@ -209,20 +209,39 @@ func validateURL(urlStr string) (string, bool, error){
 		return "", false, err
 	}
 	
-	//check to make sure the URL contains a host
-	if u.Host == ""{
-		return URL_EMPTY_HOST, false, nil
-	}
-	
-	//Check to make sure it is using a vaild scheme (http or https)
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return URL_INVALID_SCHEME, false, nil
-	}
-	
 	//Check if the URL is not absolute (relative URLs would not work anyways)
 	if !u.IsAbs() {
 		return URL_NOT_ABSOLUTE, false, nil
 	}
+	
+	//Make sure we wer given an accepted scheme
+	if u.Scheme == "http" || u.Scheme == "https"{	//Accepted URL schemes that end with "://"
+		//check to make sure the URL contains a host
+		if u.Host == ""{
+			return URL_EMPTY_HOST, false, nil
+		}
+		
+		//Check if the URL actually exists (ie. it points to a real webserver)
+		resp, err := http.Get(u.String())
+		if err != nil {
+			return URL_DOES_NOT_EXIST, false, nil
+		}
+		defer resp.Body.Close()
+		
+		if resp.StatusCode != http.StatusOK {
+			return URL_DOES_NOT_EXIST, false, nil
+		}
+		
+		
+	} else if u.Scheme == "mailto" {				//Accepted URL schemes that end with only ":"
+		//check to make sure we were given a host
+		if u.Opaque == "" {
+			return URL_EMPTY_HOST, false, nil
+		}
+	} else {
+		return URL_INVALID_SCHEME, false, nil
+	}
+	
 	
 	//Check to make sure the validated URL is equivalent to the given one
 	validStr := u.String()
@@ -279,25 +298,13 @@ func generate(ctx *web.Context){
 		internalError(ctx, errors.New("Error validating URL: "+err.Error()))
 		return
 	} else if !isValid {
-		logger.Println(validURL)
 		invalidURLPage(ctx, validURL)
 		return
 	}
 	urlStr = validURL
 	
 	
-	//Check if the URL actually exists (ie. it points to a real webserver)
-	resp, err := http.Get(urlStr)
-	if err != nil {
-		invalidURLPage(ctx, URL_DOES_NOT_EXIST)
-		return
-	}
-	defer resp.Body.Close()
 	
-	if resp.StatusCode != http.StatusOK {
-		invalidURLPage(ctx, URL_DOES_NOT_EXIST)
-		return
-	}
 	
 	
 	//TODO: Check the domain against the blacklist
