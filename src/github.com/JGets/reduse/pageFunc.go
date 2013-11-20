@@ -26,22 +26,23 @@ const(
 	URL_DOES_NOT_EXIST = "URL_DOES_NOT_EXIST"
 )
 
+
 /*
-	Parses, executes, and writes a template html page to the context object
+	Parses, executes, and writes the common page, with the given (template) page inserted as content
 	Parameters:
-		ctx:	The context of the current request
-		templ:	A map containing information about the template to be used
-					Required Keys:
-						"template_name":	The name of the template (must be the basename of the file, including the extension)
-						"template_file":	The location of the file, relative to the root app directory
+		ctx:	The context of the http request
+		contentFile:
+				The filename of the template file to be used as content (must be in the commonTemplate/content/ directory)
+		args:	A map containing all the arguments to be excecuted within the template
 */
-func templatePage(ctx *web.Context, templ map[string]string, args map[string]string){
-	
-	t, err := template.New(templ["template_name"]).ParseFiles(templ["template_file"])
+func commonTemplate(ctx *web.Context, contentFile string, args map[string]string){
+	t, err := template.New("commonTemplate.html").ParseFiles("commonTemplate/commonTemplate.html", "commonTemplate/content/"+contentFile)
 	
 	if err != nil{
 		logger.Println("ERROR: ", err.Error())
 	}
+	
+	args["content_file"] = "commonTemplate/content/" + contentFile
 	
 	//Check if a base url has been passed in. If not, set it to the default base url
 	_, baseExists := args["base_url"]
@@ -53,13 +54,15 @@ func templatePage(ctx *web.Context, templ map[string]string, args map[string]str
 	if !appNameExists {
 		args["app_name"] = appName
 	}
-    
-    err = t.Execute(ctx, args)
-    
-    if err != nil{
+
+	err = t.Execute(ctx, args)
+
+	if err != nil{
 		logger.Println("ERROR: ", err.Error())
 	}
 }
+
+
 
 /*
 	Serve the homepage
@@ -67,16 +70,10 @@ func templatePage(ctx *web.Context, templ map[string]string, args map[string]str
 		ctx:	the context of the http request
 */
 func home(ctx *web.Context){
-	
 	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGNTH + CAPTCHA_VARIANCE]
 	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 	
-	
-	templatePage(ctx, 
-				 map[string]string{"template_name":"home.html", 
-								   "template_file":"templatePages/home.html",
-								   }, 
-				 map[string]string{"captcha_id":captchaId})
+	commonTemplate(ctx, "home.html", map[string]string{"captcha_id":captchaId})
 }
 
 /*
@@ -107,16 +104,17 @@ func serveCaptchaImage(ctx *web.Context, id string){
 }
 
 
+/*
+	Reloads the CAPTCHA with the given ID, and returns a .png image representation to be solved
+	Parameters:
+		ctx:	The context of the http request
+		id:		The ID of the captcha to reload and serve
+*/
 func reloadCaptchaImage(ctx *web.Context, id string){
 	exists := captcha.Reload(id)
 	if !exists {
 		logger.Println("Error, trying to reload non-existent CAPTCHA")
 	}
-	
-	// err := captcha.WriteImage(ctx, id, captcha.StdWidth, captcha.StdHeight)
-	// if err != nil {
-	// 	logger.Println("Error, could not write CAPTCHA image\n" + err.Error())
-	// }
 	
 	serveCaptchaImage(ctx, id)
 }
@@ -137,13 +135,11 @@ func error404(ctx *web.Context, urlStr string){
 	
 	ctx.WriteHeader(404)
 	
-	templatePage(ctx,
-				 map[string]string{"template_name":"error.html",
-				 				   "template_file":"templatePages/error.html",
-				 				   },
-				 map[string]string{"title_text":"404 Page Not Found",
-				 				   "body_text":bodyStr,
-				 				   })
+	commonTemplate(ctx,
+				   "generic.html", 
+				   map[string]string{"title_text":"404 Page Not Found",
+				   					 "body_text":bodyStr,
+				   					 })
 }
 
 /*
@@ -156,13 +152,12 @@ func internalError(ctx *web.Context, err error){
 	logger.Printf("500 Internal Server Error: %v\n", err.Error())
 	
 	ctx.WriteHeader(500)
-	templatePage(ctx,
-				 map[string]string{"template_name":"error.html",
-				 				   "template_file":"templatePages/error.html",
-				 				   },
-				 map[string]string{"title_text":"500 Internal Server Error",
-				 				   "body_text":err.Error(),
-				 				   })
+	
+	commonTemplate(ctx,
+				   "generic.html",
+				   map[string]string{"title_text":"500 Internal Server Error",
+				 					 "body_text":err.Error(),
+				 					 })
 }
 
 
@@ -212,11 +207,7 @@ func invalidURLPage(ctx *web.Context, reason string) {
 			params["other_reason"] = reason
 	}
 	
-	templatePage(ctx,
-				 map[string]string{"template_name":"invalidURL.html",
-				 				   "template_file":"templatePages/invalidURL.html",
-				 				   },
-				 params)
+	commonTemplate(ctx, "invalidURL.html", params)
 }
 
 
@@ -319,22 +310,18 @@ func goodCaptchaSolution(ctx *web.Context, id, soln string) bool {
 		internalError(ctx, errors.New("Attempting to verify CAPTCHA with empty ID"))
 		return false
 	} else if soln == "" {		//Make sure they actually answered the CAPTCHA
-		templatePage(ctx,
-				 map[string]string{"template_name":"wrongCaptcha.html",
-				 				   "template_file":"templatePages/wrongCaptcha.html",
-				 				   },
-				 map[string]string{"title_text":"Incorrect CAPTCHA",
-				 				   "body_text":"You must enter a solution to the CAPTCHA to generate a short link",
-				 				   })
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Incorrect CAPTCHA",
+			 							 "body_text":"You must enter a solution to the CAPTCHA to generate a short link",
+			 							 })
 		return false
 	} else if !captcha.VerifyString(ctx.Params["captcha_id"], soln) {	//They didn't give a correct solution
-		templatePage(ctx,
-				 map[string]string{"template_name":"wrongCaptcha.html",
-				 				   "template_file":"templatePages/wrongCaptcha.html",
-				 				   },
-				 map[string]string{"title_text":"Incorrect CAPTCHA",
-				 				   "body_text":"The solution to the CAPTCHA that you entered was incorrect",
-				 				   })
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Incorrect CAPTCHA",
+			 							 "body_text":"The solution to the CAPTCHA that you entered was incorrect",
+			 							 })
 		return false
 	}
 	//The user gave us a correct solution to the CAPTCHA
@@ -436,14 +423,13 @@ func generate(ctx *web.Context){
 	
 	//Give user the output webpage
 	body := "Generate short link for " + urlStr
-	templatePage(ctx,
-				 map[string]string{"template_name":"generate.html",
-				 				   "template_file":"templatePages/generate.html",
-				 				   },
-				 map[string]string{"title_text":"Generate URL",
-				 				   "body_text":body,
-				 				   "link_hash":strings.ToLower(finalHash),
-				 				   })
+	
+	commonTemplate(ctx,
+				   "generate.html",
+				   map[string]string{"title_text":"Generate URL",
+				 					 "body_text":body,
+				 					 "link_hash":strings.ToLower(finalHash),
+				 					 })
 }
 
 /*

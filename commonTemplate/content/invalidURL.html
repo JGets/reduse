@@ -1,0 +1,31 @@
+{{define "common_content"}}
+	<div class="content">
+		<h2>{{.title_text}}</h2>
+		{{.body_text}}<br/>
+		<br/>
+		{{if .url_empty}}
+			You must give a non-empty URL
+		{{end}}
+		{{if .url_empty_host}}
+			The URL you gave does not appear to have a host.<br/>
+			(Ex: http://<strong>en.wikipedia.org</strong>/wiki/Uniform_resource_locator)
+		{{end}}
+		{{if .url_not_absolute}}
+			The URL you gave was not an absolute URL.<br/>
+			Redu.se only works with absolute URLs.
+		{{end}}
+		{{if .url_invalid_scheme}}
+			The URL you gave used an invalid scheme.<br/>
+			Only <em>http://</em>, <em>https://</em>, and <em>mailto:</em> schemes are valid to use with Redu.se
+		{{end}}
+		{{if .url_validated_inequivalent}}
+			The URL you gave could not be parsed to a valid URL
+		{{end}}
+		{{if .url_does_not_exist}}
+			We could not verify the existence of the URL you gave.
+		{{end}}
+		{{if .other_reason}}
+			{{.other_reason}}
+		{{end}}
+	</div>
+{{end}}
