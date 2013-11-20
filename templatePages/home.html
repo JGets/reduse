@@ -7,7 +7,8 @@
 		<base href="{{.base_url}}" />
 		<link href='http://fonts.googleapis.com/css?family=Didact+Gothic' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" type="text/css" href="styles.css">
-		<!-- // <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="http://code.jquery.com/color/jquery.color.plus-names-2.1.2.min.js"></script>
 		<script type="text/javascript">
 			function validate(){
 				var urlField = document.getElementById("url");
@@ -23,8 +24,19 @@
 			}
 			
 			function reloadCaptcha(){
-				document.getElementById("captchaImg").src = "{{.base_url}}captcha/img/reload/{{.captcha_id}}";
+				document.getElementById("captchaImg").src = "{{.base_url}}captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
 			}
+			
+			$(document).ready(function(){
+				$("a.link").hover(function(){
+					$(this).animate({color:"red"}, 150);
+				},function(){
+					$(this).animate({color:"white"}, 150);
+				});
+			
+				
+			});
+			
 		</script>
 	</head>
 	<body>
@@ -38,12 +50,24 @@
 				Redu.se is a simple web application designed to allow you to reduce the size of a URL
 				<div class="generate_form">
 					<form id="shorten_form" action="/generate/" method="POST">
-						<input id="url" name="url" type="text" class="url_field" autocomplete="off" placeholder="Redu.se your URL" /><br/><br/>
+						<input id="url" name="url" type="text" class="text_field" placeholder="Redu.se your URL" autocomplete="off" />
+						<br/>
+						<br/>
 						<div class="captcha_form">
 							Please prove you're human:<br/>
-							<img id="captchaImg" src="{{.base_url}}captcha/img/{{.captcha_id}}" /><br/>
-							<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter Solution Here" />&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" class="captcha_reload" onclick="reloadCaptcha();">Reload</a><br/><br/>
+							<img id="captchaImg" src="{{.base_url}}captcha/img/{{.captcha_id}}.png?width=400&height=100" /><br/>
+							<div class="captcha_options" style="position:relative; text-align:center">
+								<div style="float:left">
+									<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Text Here" />
+								</div>
+								<div class="captcha_option_links" style="float:right;">
+									<a href="#" class="link captcha_reload" onclick="reloadCaptcha();">Reload</a>
+								</span>
+								<br style="clear:both" />
+							</div>
 						</div>
+						<br/>
+						<br/>
 						<!-- <input type="submit" /> -->
 						<input type="button" value="Submit" onclick="validate()" />
 						<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
@@ -51,8 +75,8 @@
 				</div>
 			</div>
 			<footer class="footer">
-				Redu.se is open source, check it out <a href="https://github.com/JGets/reduse">here</a><br/>
-				Made by <a href="http://www.JGets.com">Jack Gettings</a>
+				Redu.se is open source, check it out <a class="link" href="https://github.com/JGets/reduse">here</a><br/>
+				Made by <a class="link" href="http://www.JGets.com">Jack Gettings</a>
 			</footer>
 		</div>
 	</body>

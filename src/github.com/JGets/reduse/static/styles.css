@@ -50,7 +50,7 @@ input[type="submit"]{
 }
 
 input[type="text"]{
-	text-align:center;
+	/*text-align:center;*/
 	background:white;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
@@ -58,6 +58,23 @@ input[type="text"]{
 	-e-border-radius: 3px;
 	border-radius: 3px;
 	border:none;
+	padding:3px;
+}
+
+::-webkit-input-placeholder {
+	text-align:center;
+}
+
+:-moz-placeholder { /* Firefox 18- */
+	text-align:center;  
+}
+
+::-moz-placeholder {  /* Firefox 19+ */
+	text-align:center;  
+}
+
+:-ms-input-placeholder {  
+	text-align:center; 
 }
 
 
@@ -65,16 +82,33 @@ input[type="text"]{
 	font-size:22pt;
 }
 
-.url_field{
-	font-size:18pt;
-	/*width:300px;*/
+
+#shorten_form #url{
+	font-size:22pt;
+	width:400px;
+}
+
+#captcha_soln{
+	font-size:12pt;
+	width:340px;
+	/*width:80%;*/
+}
+
+.captcha_options_links{
+	margin:0px 5px 0px 5px;
+}
+
+
+.captcha_options{
+	text-align:center;
 	width:100%;
 }
 
+/*
 .captcha_solution{
 	font-size:12pt;
 }
-
+*/
 .captcha_reload{
 	font-size:10pt;
 }
@@ -100,7 +134,7 @@ input[type="text"]{
 }
 
 .captcha_form{
-	width:300px;
+	/*width:300px;*/
 	margin:auto;
 	/*background:green;*/
 }
@@ -113,5 +147,5 @@ input[type="text"]{
 	-e-border-radius: 3px;
 	border-radius: 3px;
 	margin:5px 0px 0px 0px;
-	padding:0px 40px 0px 40px;
+	/*padding:0px 40px 0px 40px;*/
 }

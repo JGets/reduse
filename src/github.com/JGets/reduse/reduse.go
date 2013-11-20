@@ -85,8 +85,8 @@ func main() {
 	
 	web.Get("/", home)
 	web.Post("/generate/", generate)
-	web.Get("/captcha/img/reload/(.+)", reloadCaptchaImage)
-	web.Get("/captcha/img/(.+)", serveCaptchaImage)
+	web.Get("/captcha/img/reload/(.+).png", reloadCaptchaImage)
+	web.Get("/captcha/img/(.+).png", serveCaptchaImage)
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	web.Run(serverAddressWithPort)

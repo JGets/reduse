@@ -10,6 +10,7 @@ import(
 	"net/url"
 	"net/http"
 	"math/rand"
+	"strconv"
 	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
@@ -85,7 +86,20 @@ func home(ctx *web.Context){
 		id:		The ID of the captcha to serve
 */
 func serveCaptchaImage(ctx *web.Context, id string){
-	err := captcha.WriteImage(ctx, id, captcha.StdWidth, captcha.StdHeight)
+	
+	width, err := strconv.Atoi(ctx.Params["width"])
+	if err != nil {
+		logger.Printf("Error: could not parse captcha image width of '%v'\n%v\n", ctx.Params["width"], err.Error())
+		width = captcha.StdWidth
+	}
+	
+	height, err := strconv.Atoi(ctx.Params["height"])
+	if err != nil {
+		logger.Printf("Error: could not parse captcha image height of '%v'\n%v\n", ctx.Params["height"], err.Error())
+		height = captcha.StdHeight
+	}
+	
+	err = captcha.WriteImage(ctx, id, width, height)
 	if err != nil {
 		logger.Println("Error, could not write CAPTCHA image")
 		logger.Println(err.Error())
@@ -99,10 +113,12 @@ func reloadCaptchaImage(ctx *web.Context, id string){
 		logger.Println("Error, trying to reload non-existent CAPTCHA")
 	}
 	
-	err := captcha.WriteImage(ctx, id, captcha.StdWidth, captcha.StdHeight)
-	if err != nil {
-		logger.Println("Error, could not write CAPTCHA image\n" + err.Error())
-	}
+	// err := captcha.WriteImage(ctx, id, captcha.StdWidth, captcha.StdHeight)
+	// if err != nil {
+	// 	logger.Println("Error, could not write CAPTCHA image\n" + err.Error())
+	// }
+	
+	serveCaptchaImage(ctx, id)
 }
 
 
