@@ -5,7 +5,9 @@
 			Redu.se
 		</title>
 		<base href="{{.base_url}}" />
+		<link href='http://fonts.googleapis.com/css?family=Didact+Gothic' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" type="text/css" href="styles.css">
+		<!-- // <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
 		<script type="text/javascript">
 			function validate(){
 				var urlField = document.getElementById("url");
@@ -14,7 +16,6 @@
 				if(!(url.indexOf("http://") == 0 || url.indexOf("https://") == 0 || url.indexOf("mailto:") == 0)){
 					urlField.value = "http://" + url;
 				}
-				
 				
 				document.getElementById("shorten_form").submit();
 				
@@ -28,32 +29,31 @@
 	</head>
 	<body>
 		<div class="wrapper">
-			<h1><a href="{{.base_url}}" style="color:black; text-decoration:none">Redu.se</a></h1>
-			Redu.se is a simple web application designed to allow you to reduce the size of a URL
+			<header class="header">
+				<h1 class="app_title">
+					<a href="{{.base_url}}" id="title_link">Redu.se</a>
+				</h1>
+			</header>
+			<div class="content">
+				Redu.se is a simple web application designed to allow you to reduce the size of a URL
+				<div class="generate_form">
+					<form id="shorten_form" action="/generate/" method="POST">
+						<input id="url" name="url" type="text" class="url_field" autocomplete="off" placeholder="Redu.se your URL" /><br/><br/>
+						<div class="captcha_form">
+							Please prove you're human:<br/>
+							<img id="captchaImg" src="{{.base_url}}captcha/img/{{.captcha_id}}" /><br/>
+							<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter Solution Here" />&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" class="captcha_reload" onclick="reloadCaptcha();">Reload</a><br/><br/>
+						</div>
+						<!-- <input type="submit" /> -->
+						<input type="button" value="Submit" onclick="validate()" />
+						<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
+					</form>
+				</div>
+			</div>
+			<footer class="footer">
+				Redu.se is open source, check it out <a href="https://github.com/JGets/reduse">here</a><br/>
+				Made by <a href="http://www.JGets.com">Jack Gettings</a>
+			</footer>
 		</div>
-		<br/><br/>
-		<!-- <strong>NOTE:</strong> Redu.se is still in development, so any links generated may not work in the future. -->
-		<!-- <br/><br/><br/> -->
-		<div>
-			Redu.se your url:
-			<form id="shorten_form" action="/generate/" method="POST">
-				<input id="url" name="url" type="text" autocomplete="off" style="width:300px; height:20px; font-size:14pt;" /><br/><br/>
-				Please prove you're human:<br/>
-				<img id="captchaImg" src="{{.base_url}}captcha/img/{{.captcha_id}}" /><br/>
-				<input id="captcha_soln" name="captcha_soln" type="text" />&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" onclick="reloadCaptcha();">Reload</a><br/><br/>
-				<!-- <input type="submit" /> -->
-				<input type="button" value="Submit" onclick="validate()" />
-				<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
-			</form>
-		</div>
-		
-		<!-- Note: All links are public, and can be viewed <a href="/list/">here</a> -->
-		<br/><br/><br/>
-		Redu.se is open source, check it out <a href="https://github.com/JGets/reduse">here</a>
-		<br/><br/><br/>
-		<br/><br/><br/>
-		<footer>
-			Made by <a href="http://www.JGets.com">Jack Gettings</a>
-		</footer>
 	</body>
 </html>
