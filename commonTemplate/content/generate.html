@@ -3,6 +3,6 @@
 		<h2>{{.title_text}}</h2>
 		{{.body_text}}<br/>
 		<br/>
-		<a class="generated_link" href="http://redu.se/{{.link_hash}}">redu.se/{{.link_hash}}</a>
+		<a class="generated_link" href="{{.short_addr}}{{.link_hash}}">{{.app_name}}/{{.link_hash}}</a>
 	</div>
 {{end}}

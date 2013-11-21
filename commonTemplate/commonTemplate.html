@@ -2,57 +2,66 @@
 <html>
 	<head>
 		<title>
-			Redu.se
+			{{.app_name}}
 		</title>
 		<base href="{{.base_url}}" />
 		<link href='http://fonts.googleapis.com/css?family=Didact+Gothic' rel='stylesheet' type='text/css'>
+		<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="styles.css">
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 		<script src="http://code.jquery.com/color/jquery.color.plus-names-2.1.2.min.js"></script>
 		<script type="text/javascript">
-			function validate(){
-				var urlField = document.getElementById("url");
-				var url = urlField.value;
-				
-				if(!(url.indexOf("http://") == 0 || url.indexOf("https://") == 0 || url.indexOf("mailto:") == 0)){
-					urlField.value = "http://" + url;
-				}
-				
-				document.getElementById("shorten_form").submit();
-				
-				return;
-			}
-			
-			function reloadCaptcha(){
-				document.getElementById("captchaImg").src = "{{.base_url}}captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
-			}
-			
+			{{/* Only site-wide javascript should go here. Any page specific code should be put into that page's template */}}
 			$(document).ready(function(){
-				$("a.link").hover(function(){
-					$(this).animate({color:"red"}, 150);
+				$("a:not(#title_link)").hover(function(){
+					$(this).animate({color:"#0E8A8A"}, 150);
 				},function(){
-					$(this).animate({color:"white"}, 150);
+					$(this).animate({color:"#034A4A"}, 150);
 				});
-			
-				
 			});
 			
+			
+			function customAlert(title, text){
+				
+				$("#custom_alert_title").html(title);
+				$("#custom_alert_text").html(text);
+				
+				$("#custom_alert_wrapper").show();
+			}
+			
+			function closeCustomAlert(){
+				$("#custom_alert_wrapper").hide();
+			}
 		</script>
 	</head>
 	<body>
 		<div class="wrapper">
 			<header class="header">
 				<h1 class="app_title">
-					<a href="{{.base_url}}" id="title_link">Redu.se</a>
+					<a href="{{.base_url}}" id="title_link">{{.app_name}}</a>
 				</h1>
 			</header>
 			
 			{{template "common_content" .}}
 			
+			<!-- <div style="position:absolute; width:1000px; height:200px; bottom:0px;">
+				<a href="#" onclick="customAlert('Test', 'Test Text');">TEST</a>
+			</div> -->
+			
 			<footer class="footer">
-				Redu.se is open source, check it out <a class="link" href="https://github.com/JGets/reduse">here</a><br/>
-				Made by <a class="link" href="http://www.JGets.com">Jack Gettings</a>
+				{{.app_name}} is open source, check it out <a class="link" href="https://github.com/JGets/reduse">here</a><br/>
+				<a href="{{.base_url}}page/terms">Terms of Service</a> | Made by <a class="link" href="http://www.JGets.com">Jack Gettings</a>
 			</footer>
+		</div>
+		<div id="custom_alert_wrapper">
+			<div id="custom_alert_content">
+				<h2><span id="custom_alert_title"></span></h2>
+				<span id="custom_alert_text"></span>
+				
+				<div id="custom_alert_close_button_wrapper">
+					<input type="button" id="custom_alert_close_button" onclick="closeCustomAlert();" value="Close" />
+				</div>
+			</div>
 		</div>
 	</body>
 </html>

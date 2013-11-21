@@ -1,7 +1,9 @@
-app_name=Reduse
+app_name=Redu.se
 
 server_address=redu.se
 base_url=http://www.redu.se/
+short_addr=http://redu.se/
 
 dev_server_address=0.0.0.0
 dev_base_url=http://0.0.0.0:8080/
+dev_short_addr=http://0.0.0.0:8080/

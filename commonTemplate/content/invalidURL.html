@@ -12,11 +12,11 @@
 		{{end}}
 		{{if .url_not_absolute}}
 			The URL you gave was not an absolute URL.<br/>
-			Redu.se only works with absolute URLs.
+			{{.app_name}} only works with absolute URLs.
 		{{end}}
 		{{if .url_invalid_scheme}}
 			The URL you gave used an invalid scheme.<br/>
-			Only <em>http://</em>, <em>https://</em>, and <em>mailto:</em> schemes are valid to use with Redu.se
+			Only <em>http://</em>, <em>https://</em>, and <em>mailto:</em> schemes are valid to use with {{.app_name}}
 		{{end}}
 		{{if .url_validated_inequivalent}}
 			The URL you gave could not be parsed to a valid URL

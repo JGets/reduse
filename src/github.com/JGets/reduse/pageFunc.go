@@ -54,6 +54,11 @@ func commonTemplate(ctx *web.Context, contentFile string, args map[string]string
 	if !appNameExists {
 		args["app_name"] = appName
 	}
+	
+	_, shortAddrExists := args["short_addr"]
+	if !shortAddrExists {
+		args["short_addr"] = siteShortAddr
+	}
 
 	err = t.Execute(ctx, args)
 
@@ -74,6 +79,10 @@ func home(ctx *web.Context){
 	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 	
 	commonTemplate(ctx, "home.html", map[string]string{"captcha_id":captchaId})
+}
+
+func showTerms(ctx *web.Context){
+	commonTemplate(ctx, "terms.html", map[string]string{})
 }
 
 /*

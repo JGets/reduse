@@ -19,13 +19,15 @@ var DEFAULTS = map[string]string {
 								  "app_name":"[APP_NAME]",
 								  "server_address":"",
 								  "base_url":"http://0.0.0.0:8080",
+								  "short_addr":"http://0.0.0.0:8080",
 								  "dev_port":"8080",
 								  "dev_base_url":"http://0.0.0.0:8080/",
+								  "dev_short_addr":"http://0.0.0.0:8080",
 								  }
 
 //Global app variables
 var devMode bool
-var appName, serverAddress, siteBaseURL string
+var appName, serverAddress, siteBaseURL, siteShortAddr string
 var logger *log.Logger
 
 
@@ -84,9 +86,10 @@ func main() {
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
 	web.Get("/", home)
-	web.Post("/generate/", generate)
-	web.Get("/captcha/img/reload/(.+).png", reloadCaptchaImage)
-	web.Get("/captcha/img/(.+).png", serveCaptchaImage)
+	web.Get("/page/terms/?", showTerms)
+	web.Post("/page/generate/", generate)
+	web.Get("/captcha/img/reload/(.+)\\.png", reloadCaptchaImage)
+	web.Get("/captcha/img/(.+)\\.png", serveCaptchaImage)
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	web.Run(serverAddressWithPort)

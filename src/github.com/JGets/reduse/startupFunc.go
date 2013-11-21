@@ -139,8 +139,10 @@ func setConfigVars(configs map[string]string) {
 	if devMode {
 		serverAddress = configs["dev_server_address"]
 		siteBaseURL = configs["dev_base_url"]
+		siteShortAddr = configs["dev_short_addr"]
 	} else {
 		serverAddress = configs["server_address"]
 		siteBaseURL = configs["base_url"]
+		siteShortAddr = configs["short_addr"]
 	}
 }
