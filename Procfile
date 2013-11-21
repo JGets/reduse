@@ -1,1 +1,1 @@
-web: ./reduse
+web: github.com/JGets/reduse
