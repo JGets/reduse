@@ -430,13 +430,10 @@ func generate(ctx *web.Context){
 		}
 	}
 	
-	//Give user the output webpage
-	body := "Generate short link for " + urlStr
-	
 	commonTemplate(ctx,
 				   "generate.html",
-				   map[string]string{"title_text":"Generate URL",
-				 					 "body_text":body,
+				   map[string]string{"title_text":"Generated Link",
+				 					 "dest_url":urlStr,
 				 					 "link_hash":strings.ToLower(finalHash),
 				 					 })
 }

@@ -20,6 +20,8 @@
 		
 		function reloadCaptcha(){
 			document.getElementById("captchaImg").src = "{{.base_url}}captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
+			
+			document.getElementById("captcha_soln").value = ""
 		}
 		
 		$(document).ready(function(){
@@ -40,10 +42,10 @@
 					</div>
 					<img id="captchaImg" src="{{.base_url}}captcha/img/{{.captcha_id}}.png?width=400&height=100" /><br/>
 					
-					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" />
+					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
 				</div>
 				<!-- <input type="submit" /> -->
-				<input type="button" value="Click Here to {{.app_name}} It!" onclick="validate()" />
+				<input type="button" value="{{.app_name}} It!" onclick="validate()" />
 				<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 			</form>
 		</div>
