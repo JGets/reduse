@@ -27,5 +27,11 @@
 		{{if .other_reason}}
 			{{.other_reason}}
 		{{end}}
+		{{if .show_try_again}}
+			<br/>
+			<br/>
+			<br/>
+			<a href="{{.base_url}}?url={{.user_url}}">Try Again</a>
+		{{end}}
 	</div>
 {{end}}

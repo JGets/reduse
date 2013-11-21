@@ -1,4 +1,14 @@
 
+::selection {
+  background:#89D7D7;
+  /*color:#fff;*/
+}
+
+::-moz-selection {
+  background:#89D7D7;
+  /*color:#fff;*/
+}
+
 body{
 	text-align: center;
 	font-family:'Didact Gothic', Arial, arial, sans-serif;
@@ -50,6 +60,7 @@ input[type="text"]{
 	outline:none;
 }
 
+
 input[type="button"],
 input[type="submit"]{
 	background-color:white;
@@ -65,6 +76,13 @@ input[type="text"]{
 	padding:3px;
 	background:transparent;
 	border:1px #0E8A8A solid;
+}
+
+input[type="text"]::selection{
+	background-color:#89D7D7;
+}
+input[type="text"]::-moz-selection{
+	background-color:#89D7D7;
 }
 
 .wrapper{
@@ -147,6 +165,7 @@ input[type="text"]{
 }
 
 .captcha_option_icon{
+	display:block;
 	font-size:12pt;
 	background-color:rgba(3,74,74,0.5);
 	color:white;
@@ -154,7 +173,12 @@ input[type="text"]{
 	-webkit-border-radius: 25px;
 	-o-border-radius: 25px;
 	-e-border-radius: 25px;
+	border-radius: 25px;
 	padding:6px;
+}
+
+.captcha_option_button{
+	cursor:pointer;
 }
 
 .captcha_form{

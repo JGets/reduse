@@ -6,12 +6,32 @@
 			
 			if (url === "") {
 				customAlert("Error", "You must enter a URL to shorten");
-				return
+				return;
 			}
 			
 			if(!(url.indexOf("http://") == 0 || url.indexOf("https://") == 0 || url.indexOf("mailto:") == 0)){
 				urlField.value = "http://" + url;
 			}
+			
+			
+			var capSoln = document.getElementById("captcha_soln").value;
+			
+			if(capSoln == ""){
+				customAlert("Error", "You must enter a solution to the CAPTCHA");
+				return;
+			} else if(capSoln.length < 6){
+				customAlert("Error", "Your solution to the CAPTCHA is too short");
+				return;
+			} else if(capSoln.length > 8){
+				customAlert("Error", "Your solution to the CAPTCHA is too long");
+				return;
+			}
+			
+			if(capSoln.search("[^0-9]") != -1){
+				customAlert("Error", "A CAPTCHA solution contains only numbers (0-9)");
+				return;
+			}
+			
 			
 			document.getElementById("shorten_form").submit();
 			
@@ -54,28 +74,32 @@
 		// }
 		
 		$(document).ready(function(){
-			$("#shorten_form #url").focus(function(){
+			{{if .user_url}} {{/* If we were given a url parameter, show the CAPTCHA form once the page is ready */}}
 				$(".captcha_form").slideDown(500);
-			});
+			{{else}}
+				$("#shorten_form #url").focus(function(){
+					$(".captcha_form").slideDown(500);
+				});
+			{{end}}
 		});
 	</script>
 	<div class="content">
 		{{.app_name}} is a simple web application designed to allow you to reduce the size of a URL
 		<div class="generate_form">
 			<form id="shorten_form" action="/page/generate/" method="POST">
-				<input id="url" name="url" type="text" class="text_field" placeholder="Enter A URL Here" autocomplete="off" />
+				<input id="url" name="url" type="text" class="text_field" placeholder="Enter A URL Here" value="{{.user_url}}" autocomplete="off" />
 				<div class="captcha_form">
 					<!-- Please prove you're human:<br/> -->
 					
 					<div id="captcha_image_wrapper">
-						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" /><br/>
+						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
 					
 						<div id="captcha_options_wrapper">
 							<!--div id="captcha_audio_wrapper">
-								<a href="#" id="play_captcha_audio_button" onclick="playCaptchaAudio();"><i id="play_captcha_audio_icon" class="fa fa-volume-up captcha_option_icon"></i></a>
+								<a id="play_captcha_audio_button" class="captcha_option_button" onclick="playCaptchaAudio();"><i id="play_captcha_audio_icon" class="fa fa-volume-up captcha_option_icon"></i></a>
 							</div-->
 							<div id="captcha_reload_wrapper">
-								<a href="#" onclick="reloadCaptcha();"><i class="fa fa-repeat captcha_option_icon"></i></a>
+								<a class="captcha_option_button" onclick="reloadCaptcha();"><i class="fa fa-repeat captcha_option_icon"></i></a>
 							</div>
 						</div>
 					</div>
@@ -83,7 +107,7 @@
 					
 					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
 				</div>
-				<!-- <input type="submit" /> -->
+				<input type="submit" style="width:0px; height:0px; overflow:hidden; padding:0px; margin:0px; border:none;" />
 				<input type="button" value="{{.app_name}} It!" onclick="validate()" />
 				<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 			</form>

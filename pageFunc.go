@@ -78,7 +78,9 @@ func home(ctx *web.Context){
 	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGNTH + CAPTCHA_VARIANCE]
 	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 	
-	commonTemplate(ctx, "home.html", map[string]string{"captcha_id":captchaId})
+	
+	
+	commonTemplate(ctx, "home.html", map[string]string{"captcha_id":captchaId, "user_url":ctx.Params["url"]})
 }
 
 func showTerms(ctx *web.Context){
@@ -211,6 +213,8 @@ func invalidURLPage(ctx *web.Context, reason string) {
 	
 	params := make(map[string]string)
 	
+	params["user_url"] = ctx.Params["url"]
+	params["show_try_again"] = "true"
 	
 	params["title_text"] = "Invalid URL"
 	params["body_text"] = "The given URL to shorten was invalid."
@@ -341,6 +345,8 @@ func goodCaptchaSolution(ctx *web.Context, id, soln string) bool {
 					   "generic.html",
 					   map[string]string{"title_text":"Incorrect CAPTCHA",
 			 							 "body_text":"You must enter a solution to the CAPTCHA to generate a short link",
+			 							 "show_try_again":"true",
+			 							 "user_url":ctx.Params["url"],
 			 							 })
 		return false
 	} else if !captcha.VerifyString(ctx.Params["captcha_id"], soln) {	//They didn't give a correct solution
@@ -348,6 +354,8 @@ func goodCaptchaSolution(ctx *web.Context, id, soln string) bool {
 					   "generic.html",
 					   map[string]string{"title_text":"Incorrect CAPTCHA",
 			 							 "body_text":"The solution to the CAPTCHA that you entered was incorrect",
+			 							 "show_try_again":"true",
+			 							 "user_url":ctx.Params["url"],
 			 							 })
 		return false
 	}

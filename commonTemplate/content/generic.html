@@ -3,4 +3,10 @@
 		<h2>{{.title_text}}</h2>
 		{{.body_text}}
 	</div>
+	{{if .show_try_again}}
+		<br/>
+		<br/>
+		<br/>
+		<a href="{{.base_url}}?url={{.user_url}}">Try Again</a>
+	{{end}}
 {{end}}
