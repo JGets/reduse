@@ -85,6 +85,7 @@ func showTerms(ctx *web.Context){
 	commonTemplate(ctx, "terms.html", map[string]string{})
 }
 
+
 /*
 	Serves a CAPTCHA image
 	Parameters:
@@ -104,6 +105,9 @@ func serveCaptchaImage(ctx *web.Context, id string){
 		logger.Printf("Error: could not parse captcha image height of '%v'\n%v\n", ctx.Params["height"], err.Error())
 		height = captcha.StdHeight
 	}
+	
+	//tell the user's browser not to cache the image file
+	ctx.SetHeader("Cache-Control", "no-cache", true)
 	
 	err = captcha.WriteImage(ctx, id, width, height)
 	if err != nil {
@@ -126,6 +130,20 @@ func reloadCaptchaImage(ctx *web.Context, id string){
 	}
 	
 	serveCaptchaImage(ctx, id)
+}
+
+
+
+func serveCaptchaAudio(ctx *web.Context, id string){
+	//tell the user's browser not to cache the audio file
+		//(would cause old audio file to be used even if user has reloaded the CAPTCHA)
+	ctx.SetHeader("Cache-Control", "no-cache", true)
+	
+	err := captcha.WriteAudio(ctx, id, "english")
+	if err != nil {
+		logger.Println("Error, could not write CAPTCHA audio")
+		logger.Println(err.Error())
+	}
 }
 
 

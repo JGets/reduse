@@ -18,11 +18,40 @@
 			return;
 		}
 		
+		var captchaAudioIsPlaying = false;
 		function reloadCaptcha(){
 			document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
-			
 			document.getElementById("captcha_soln").value = ""
+			
+			if(captchaAudioIsPlaying){
+				stopCaptchaAudio();
+			}
+			
 		}
+		
+		// function playCaptchaAudio(){
+			
+		// 	$("#play_captcha_audio_icon").removeClass("fa-volume-up").addClass("fa-stop");
+		// 	//$("#play_captcha_audio_button").click(function(){stopCaptchaAudio();});
+		// 	$("#play_captcha_audio_button").attr("onclick", "stopCaptchaAudio();");
+			
+		// 	captchaAudioIsPlaying = true;
+			
+		// 	// var d = new Date();
+			
+		// 	$("#captcha_audio_player_wrapper").html("<audio autoplay src=\"{{.base_url}}rsrc/captcha/audio/{{.captcha_id}}.wav\" type=\"audio/wav\"></audio>");
+			
+		// }
+		
+		// function stopCaptchaAudio(){
+		// 	$("#play_captcha_audio_icon").removeClass("fa-stop").addClass("fa-volume-up");
+		// 	// $("#play_captcha_audio_button").click(function(){playCaptchaAudio();});
+		// 	$("#play_captcha_audio_button").attr("onclick", "playCaptchaAudio();");
+			
+		// 	captchaAudioIsPlaying = false;
+			
+		// 	$("#captcha_audio_player_wrapper").html("");
+		// }
 		
 		$(document).ready(function(){
 			$("#shorten_form #url").focus(function(){
@@ -37,10 +66,20 @@
 				<input id="url" name="url" type="text" class="text_field" placeholder="Enter A URL Here" autocomplete="off" />
 				<div class="captcha_form">
 					<!-- Please prove you're human:<br/> -->
-					<div id="captcha_reload_wrapper">
-						<a href="#" class="link captcha_reload" onclick="reloadCaptcha();"><i class="fa fa-repeat reload_icon"></i></a>
+					
+					<div id="captcha_image_wrapper">
+						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" /><br/>
+					
+						<div id="captcha_options_wrapper">
+							<!--div id="captcha_audio_wrapper">
+								<a href="#" id="play_captcha_audio_button" onclick="playCaptchaAudio();"><i id="play_captcha_audio_icon" class="fa fa-volume-up captcha_option_icon"></i></a>
+							</div-->
+							<div id="captcha_reload_wrapper">
+								<a href="#" onclick="reloadCaptcha();"><i class="fa fa-repeat captcha_option_icon"></i></a>
+							</div>
+						</div>
 					</div>
-					<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" /><br/>
+					
 					
 					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
 				</div>
@@ -49,5 +88,8 @@
 				<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 			</form>
 		</div>
+		<!--div style="width:0px; height:0px; overflow:hidden;">
+			<div id="captcha_audio_player_wrapper"></div>
+		</div-->
 	</div>
 {{end}}

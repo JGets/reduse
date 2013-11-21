@@ -90,6 +90,7 @@ func main() {
 	web.Post("/page/generate/", generate)
 	web.Get("/rsrc/captcha/img/reload/(.+)\\.png", reloadCaptchaImage)
 	web.Get("/rsrc/captcha/img/(.+)\\.png", serveCaptchaImage)
+	web.Get("/rsrc/captcha/audio/(.+)\\.wav", serveCaptchaAudio)
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	web.Run(serverAddressWithPort)
