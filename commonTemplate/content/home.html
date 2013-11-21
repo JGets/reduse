@@ -19,7 +19,7 @@
 		}
 		
 		function reloadCaptcha(){
-			document.getElementById("captchaImg").src = "{{.base_url}}captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
+			document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
 			
 			document.getElementById("captcha_soln").value = ""
 		}
@@ -40,7 +40,7 @@
 					<div id="captcha_reload_wrapper">
 						<a href="#" class="link captcha_reload" onclick="reloadCaptcha();"><i class="fa fa-repeat reload_icon"></i></a>
 					</div>
-					<img id="captchaImg" src="{{.base_url}}captcha/img/{{.captcha_id}}.png?width=400&height=100" /><br/>
+					<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" /><br/>
 					
 					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
 				</div>

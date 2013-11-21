@@ -13,7 +13,8 @@
 		<script type="text/javascript">
 			{{/* Only site-wide javascript should go here. Any page specific code should be put into that page's template */}}
 			$(document).ready(function(){
-				$("a:not(#title_link)").hover(function(){
+				// $("a:not(#title_link)").hover(function(){
+				$("a").hover(function(){
 					$(this).animate({color:"#0E8A8A"}, 150);
 				},function(){
 					$(this).animate({color:"#034A4A"}, 150);
