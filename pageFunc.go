@@ -75,12 +75,17 @@ func commonTemplate(ctx *web.Context, contentFile string, args map[string]string
 		ctx:	the context of the http request
 */
 func home(ctx *web.Context){
-	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGNTH + CAPTCHA_VARIANCE]
+	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE]
 	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 	
-	
-	
-	commonTemplate(ctx, "home.html", map[string]string{"captcha_id":captchaId, "user_url":ctx.Params["url"]})
+
+	commonTemplate(ctx, 
+				   "home.html", 
+				   map[string]string{"captcha_id":captchaId, 
+									 "user_url":ctx.Params["url"],
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 })
 }
 
 func showTerms(ctx *web.Context){

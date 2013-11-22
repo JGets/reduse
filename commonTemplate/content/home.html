@@ -19,10 +19,10 @@
 			if(capSoln == ""){
 				customAlert("Error", "You must enter a solution to the CAPTCHA");
 				return;
-			} else if(capSoln.length < 6){
+			} else if(capSoln.length < {{.captcha_soln_min_length}}){
 				customAlert("Error", "Your solution to the CAPTCHA is too short");
 				return;
-			} else if(capSoln.length > 8){
+			} else if(capSoln.length > {{.captcha_soln_max_length}}){
 				customAlert("Error", "Your solution to the CAPTCHA is too long");
 				return;
 			}
