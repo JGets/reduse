@@ -13,13 +13,18 @@
 		<script type="text/javascript">
 			{{/* Only site-wide javascript should go here. Any page specific code should be put into that page's template */}}
 			$(document).ready(function(){
+				bindAnchorHover();
+				
+			});
+			
+			function bindAnchorHover(){
 				// $("a:not(#title_link)").hover(function(){
 				$("a").hover(function(){
 					$(this).stop().animate({color:"#0E8A8A"}, 150);
 				},function(){
 					$(this).stop().animate({color:"#034A4A"}, 150);
 				});
-			});
+			}
 			
 			
 			function customAlert(title, text){
@@ -57,8 +62,7 @@
 		<div id="custom_alert_wrapper">
 			<div id="custom_alert_content">
 				<h2><span id="custom_alert_title"></span></h2>
-				<span id="custom_alert_text"></span>
-				
+				<div id="custom_alert_text"></div>
 				<div id="custom_alert_close_button_wrapper">
 					<input type="button" id="custom_alert_close_button" onclick="closeCustomAlert();" value="Close" />
 				</div>

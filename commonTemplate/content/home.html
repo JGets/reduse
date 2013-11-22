@@ -1,43 +1,158 @@
 {{define "common_content"}}
 	<script type="text/javascript">
-		function validate(){
+		
+		function validateForm(){
 			var urlField = document.getElementById("url");
 			var url = urlField.value;
 			
 			if (url === "") {
 				customAlert("Error", "You must enter a URL to shorten");
-				return;
+				return false;
 			}
 			
-			if(!(url.indexOf("http://") == 0 || url.indexOf("https://") == 0 || url.indexOf("mailto:") == 0)){
-				urlField.value = "http://" + url;
+			//console.log("### Starting check for URL: " + url + " ###");
+			
+			//Check to see if the user has input a scheme
+			var schemeRegex = new RegExp("^[a-zA-Z][a-zA-Z0-9+-]*:(//)?.*", "g"); 
+				/*
+				NOTE:
+					Generic URI syntax states that a scheme consists of a sequence of characters beginning with a letter and followed by any
+					combination of letters, digits, plus ('+'), period ('.'), or hyphen ('-'). For the purposes of this application, we will
+					EXCLUDE the period ('.') from this definition, as:
+						1. It will cause the regexp to give false positives when a port is specified (ie. "google.com:80" would be matched)
+					2. None of the accepted schemes to shorten contain a period ('.')
+				*/
+			var hasScheme = schemeRegex.test(url);
+			//console.log("passes schemeRegex: "+hasScheme);
+			if(!hasScheme){	//If there was no scheme, the add an "implied" http://
+				url = "http://" + url;
+				urlField.value = url;
+				//console.log("added implied http://");
 			}
+			
+			//console.log("url after scheme check: "+url);
+			
+			
+			//Validate the URL syntax
+			var acceptedRegex = new RegExp("(^(http|https)://([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)*[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9](\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/.+$)|^mailto:((.+@.+\\..+,)*(.+@.+\\..+)|\\?(.+=.*&)*.+=.*|(.+@.+\\..+,)*(.+@.+\\..+)\\?(.+=.*&)*.+=.*))", "g");
+			var isAcceptable = acceptedRegex.test(url);
+			
+			//console.log("Considered Accpetable: "+ isAcceptable);
+			
+			
+			//If we could not validate the syntax of the URL, try and figure out why
+			if(!isAcceptable){	
+				
+				var firstCol = url.search(":");
+				var firstDot = url.search("\\.");
+				
+				if(firstCol >= 0){	//There is a ':' in the given URL (assume it immediatley follows the scheme)
+					var scheme = url.substr(0, firstCol);
+					
+					//console.log("parsed scheme: "+scheme);
+								
+					//There was no scheme			
+					if(scheme == ""){
+						customAlert("Error", "The URL you enetered appears to have an empty <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a>.<br/><br/>Accepted schemes are <strong>http</strong>, <strong>https</strong>, and <strong>mailto</strong>");
+						bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
+						return false;
+					}
+					
+					//It is not an accepted schem
+					if(!(scheme == "http" || scheme == "https" || scheme == "mailto")){
+						customAlert("Error", "The scheme \"" + scheme + "\" is not an accepted <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a> for {{.app_name}}.<br/><br/>Accepted schemes are <strong>http</strong>, <strong>https</strong>, and <strong>mailto</strong>");
+						bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
+						return false;
+					}
+					
+					//Scheme specific validation here:
+					if(scheme == "http" || scheme == "https"){
+						if(firstDot === -1){	//check for a domain (ie .com, .org, etc.)
+							customAlert("Error", "The URL you entered does not seem to have a proper <a href=\"http://en.wikipedia.org/wiki/Domain_name#Domain_name_space\" target=\"_blank\">domain</a>.<br/><br/>A domain is something like <strong>.com</strong>, <strong>.org</strong>, or <strong>.co.uk</strong>");
+							bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
+							return false;
+						}
+						
+						//The user forgot the "//" after "http:"
+						if(url.substr(firstCol+1,2) != "//"){
+							customAlert("Error", "The URL you entered appears to be invalid.<br/><br/>Tip: Make sure you typed the scheme correctly.<br/>(ie. <strong>http://</strong> or <strong>https://</strong>)");
+							return false;
+						}
+						
+						var domFirstCharRegEx = new RegExp("https?://[a-zA-Z0-9]", "g");
+						if(!domFirstCharRegEx.test(url)){
+							customAlert("Error", "The URL you entered appears to be invalid.<br/>A domain name must start with a letter or number.<br/><br/>Tip: Make sure there aren't any extra characters after the scheme. (ie. <strong>http://google.com</strong> not <strong>http:///google.com</strong>, <strong>http://.google.com</strong> or <strong>http://~google.com</strong>)");
+							return false;
+						}
+						
+						
+						//Check to make sure all the domain labels are at least 2 characters long
+						var domain = url.substr(firstCol+3);
+						var nextSlash = domain.indexOf("/");
+						if(nextSlash >= 0){
+							domain = domain.substring(0, nextSlash);
+						}
+						
+						//console.log("Domain: " +domain);
+						
+						var labels = domain.split(".");
+						for(var i = 0; i < labels.length; i++){
+							if(labels[i].length < 2){
+								customAlert("Error", "The URL you enetered appears to be invalid.<br/><br/>Tip: A <a href=\"http://en.wikipedia.org/wiki/Domain_name\" target=\"_blank\">domain name</a>'s labels (the parts inbetween the periods) must be 2 or more characters long.");
+								bindAnchorHover();
+								return false;
+							}
+						}
+						
+					}
+					
+					if(scheme == "mailto"){
+						var firstAt = url.search("@");
+						var firstQues = url.search("\\?");
+						
+						if(url.substr(firstCol) == ""){
+							customAlert("Error", "The URL you enetered appears to be an empty <strong>mailto:</strong>.");
+							return false;
+						}
+					}
+				}
+				
+				//Could not find a specific reason, so give the user a generic error response
+				customAlert("Error", "The URL you enetered appears to be invalid."); //<br/>If you beleive this is incorrect, please <a href=\"\">let us know</a>.");
+				bindAnchorHover();
+				return false;
+				
+			}
+			
+			// if(!(url.indexOf("http://") == 0 || url.indexOf("https://") == 0 || url.indexOf("mailto:") == 0)){
+			// 	urlField.value = "http://" + url;
+			// }
 			
 			
 			var capSoln = document.getElementById("captcha_soln").value;
-			var c_minLength = parseInt({{.captcha_soln_min_length}})
-			var c_maxLength = parseInt({{.captcha_soln_max_length}})
+			var c_minLength = parseInt({{.captcha_soln_min_length}});
+			var c_maxLength = parseInt({{.captcha_soln_max_length}});
 			
 			if(capSoln == ""){
 				customAlert("Error", "You must enter a solution to the CAPTCHA");
-				return;
+				return false;
 			} else if(capSoln.length < c_minLength){
 				customAlert("Error", "Your solution to the CAPTCHA is too short");
-				return;
+				return false;
 			} else if(capSoln.length > c_maxLength){
 				customAlert("Error", "Your solution to the CAPTCHA is too long");
-				return;
+				return false;
 			}
 			
 			if(capSoln.search("[^0-9]") != -1){
 				customAlert("Error", "A CAPTCHA solution contains only numbers (0-9)");
-				return;
+				return false;
 			}
 			
 			
-			document.getElementById("shorten_form").submit();
+			//document.getElementById("shorten_form").submit();
 			
-			return;
+			return true;
 		}
 		
 		var captchaAudioIsPlaying = false;
@@ -85,13 +200,19 @@
 					$(".captcha_form").slideDown(500);
 				});
 			{{end}}
+			
+			$("#shorten_form").submit(function(event){
+				if(!validateForm()){
+					event.preventDefault();
+				}
+			});
 		});
 	</script>
 	<div class="content">
 		{{.app_name}} is a simple web application designed to allow you to reduce the size of a URL
 		<div class="generate_form">
 			<form id="shorten_form" action="/page/generate/" method="POST">
-				<input id="url" name="url" type="text" class="text_field" placeholder="Enter A URL Here" value="{{.user_url}}" autocomplete="off" />
+				<input id="url" name="url" type="text" class="text_field" placeholder="Enter A URL Here" value="{{.user_url}}" autocomplete="off" maxlength="2000"/>
 				<div class="captcha_form">
 					<!-- Please prove you're human:<br/> -->
 					
@@ -111,8 +232,9 @@
 					
 					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
 				</div>
-				<input type="submit" style="width:0px; height:0px; overflow:hidden; padding:0px; margin:0px; border:none;" />
-				<input type="button" value="{{.app_name}} It!" onclick="validate()" />
+				<!--input type="submit" style="width:0px; height:0px; overflow:hidden; padding:0px; margin:0px; border:none;" /-->
+				<input type="submit" value="{{.app_name}} It!" />
+				<!--input type="button" value="{{.app_name}} It!" onclick="validate()" /-->
 				<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 			</form>
 		</div>
