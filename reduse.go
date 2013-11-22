@@ -77,7 +77,7 @@ func main() {
 	if !devMode {
 		//Set up the NewRelic agent
 		agent := gorelic.NewAgent()
-		agent.Verbose = true
+		// agent.Verbose = true
 		agent.NewrelicLicense = os.Getenv("REDUSE_NEWRELIC_LICENSE_KEY")
 		agent.NewrelicName = "Redu.se"
 		agent.Run()
