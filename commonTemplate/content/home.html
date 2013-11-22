@@ -15,14 +15,16 @@
 			
 			
 			var capSoln = document.getElementById("captcha_soln").value;
+			var c_minLength = parseInt({{.captcha_soln_min_length}})
+			var c_maxLength = parseInt({{.captcha_soln_max_length}})
 			
 			if(capSoln == ""){
 				customAlert("Error", "You must enter a solution to the CAPTCHA");
 				return;
-			} else if(capSoln.length < {{.captcha_soln_min_length}}){
+			} else if(capSoln.length < c_minLength){
 				customAlert("Error", "Your solution to the CAPTCHA is too short");
 				return;
-			} else if(capSoln.length > {{.captcha_soln_max_length}}){
+			} else if(capSoln.length > c_maxLength){
 				customAlert("Error", "Your solution to the CAPTCHA is too long");
 				return;
 			}
@@ -49,6 +51,7 @@
 			
 		}
 		
+		{{/*
 		// function playCaptchaAudio(){
 			
 		// 	$("#play_captcha_audio_icon").removeClass("fa-volume-up").addClass("fa-stop");
@@ -72,6 +75,7 @@
 			
 		// 	$("#captcha_audio_player_wrapper").html("");
 		// }
+		*/}}
 		
 		$(document).ready(function(){
 			{{if .user_url}} {{/* If we were given a url parameter, show the CAPTCHA form once the page is ready */}}
@@ -112,8 +116,10 @@
 				<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 			</form>
 		</div>
+		{{/*
 		<!--div style="width:0px; height:0px; overflow:hidden;">
 			<div id="captcha_audio_player_wrapper"></div>
 		</div-->
+		*/}}
 	</div>
 {{end}}
