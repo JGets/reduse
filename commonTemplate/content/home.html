@@ -1,5 +1,7 @@
 {{define "common_content"}}
 	<script type="text/javascript">
+		//var validSchemesText = "Accepted schemes are <strong>http</strong>, <strong>https</strong>, and <strong>mailto</strong>";
+		var validSchemesText = "Accepted schemes are <strong>http</strong> and <strong>https</strong>";
 		
 		function validateForm(){
 			var urlField = document.getElementById("url");
@@ -34,7 +36,8 @@
 			
 			
 			//Validate the URL syntax
-			var acceptedRegex = new RegExp("(^(http|https)://([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)*[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9](\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/.+$)|^mailto:((.+@.+\\..+,)*(.+@.+\\..+)|\\?(.+=.*&)*.+=.*|(.+@.+\\..+,)*(.+@.+\\..+)\\?(.+=.*&)*.+=.*))", "g");
+			//var acceptedRegex = new RegExp("(^(http|https)://([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)*[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9](\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/.+$)|^mailto:((.+@.+\\..+,)*(.+@.+\\..+)|\\?(.+=.*&)*.+=.*|(.+@.+\\..+,)*(.+@.+\\..+)\\?(.+=.*&)*.+=.*))", "g"); //http, https, & mailto
+			var acceptedRegex = new RegExp("^(http|https)://([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)*[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9](\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/$|\\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]/.+$)", "g"); //http & https
 			var isAcceptable = acceptedRegex.test(url);
 			
 			//console.log("Considered Accpetable: "+ isAcceptable);
@@ -53,14 +56,14 @@
 								
 					//There was no scheme			
 					if(scheme == ""){
-						customAlert("Error", "The URL you enetered appears to have an empty <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a>.<br/><br/>Accepted schemes are <strong>http</strong>, <strong>https</strong>, and <strong>mailto</strong>");
+						customAlert("Error", "The URL you enetered appears to have an empty <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a>.<br/><br/>" + validSchemesText);
 						bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
 						return false;
 					}
 					
 					//It is not an accepted schem
 					if(!(scheme == "http" || scheme == "https" || scheme == "mailto")){
-						customAlert("Error", "The scheme \"" + scheme + "\" is not an accepted <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a> for {{.app_name}}.<br/><br/>Accepted schemes are <strong>http</strong>, <strong>https</strong>, and <strong>mailto</strong>");
+						customAlert("Error", "The scheme \"" + scheme + "\" is not an accepted <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a> for {{.app_name}}.<br/><br/>" + validSchemesText);
 						bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
 						return false;
 					}
@@ -106,7 +109,7 @@
 						
 					}
 					
-					if(scheme == "mailto"){
+					/*if(scheme == "mailto"){
 						var firstAt = url.search("@");
 						var firstQues = url.search("\\?");
 						
@@ -114,7 +117,7 @@
 							customAlert("Error", "The URL you enetered appears to be an empty <strong>mailto:</strong>.");
 							return false;
 						}
-					}
+					}*/
 				}
 				
 				//Could not find a specific reason, so give the user a generic error response

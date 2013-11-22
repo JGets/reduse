@@ -309,11 +309,11 @@ func validateURL(urlStr string) (string, bool, error){
 			return URL_DOES_NOT_EXIST, false, nil
 		}
 		
-	} else if u.Scheme == "mailto" {				//Accepted URL schemes that end with only ":"
+	/*} else if u.Scheme == "mailto" {				//Accepted URL schemes that end with only ":"
 		//check to make sure we were given a host
 		if u.Opaque == "" {
 			return URL_EMPTY_HOST, false, nil
-		}
+		}*/
 	} else {
 		//The URL does not have a scheme, or it is not an accepted scheme
 		return URL_INVALID_SCHEME, false, nil
