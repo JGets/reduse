@@ -521,12 +521,14 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 
 
 func reportLink(ctx *web.Context){
+	//TODO: add CAPTCHA serving
 	commonTemplate(ctx, "report.html", map[string]string{"title_text":"Report A Link"})
 }
 
 func submitReport(ctx *web.Context){
 	//TODO: implement actual reporting/flagging/emailing of reported link
-	//commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Report A Link", "body_text":"This functionality is yet to be implemented"})
+	//TODO: add CAPTCHA verification
+	//TODO: add verification that the reported link actually exists
 	
 	linkId := ctx.Params["linkId"]
 	
