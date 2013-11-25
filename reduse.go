@@ -44,6 +44,8 @@ func main() {
 	dbUsername := os.Getenv("REDUSE_DB_USERNAME")
 	dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
 	
+	//get the pertinent email information
+	emailUsername := os.Getenv("REDUSE_EMAIL_USERNAME")
 	emailPassword := os.Getenv("REDUSE_EMAIL_PASSWORD")
 	adminEmails := os.Getenv("REDUSE_EMAIL_ADMIN_ADDRESSES")
 	
@@ -71,7 +73,8 @@ func main() {
 		return
 	}
 	
-	err = initEmail(adminEmails, emailPassword)
+	//Initialize the email sending functionality
+	err = initEmail(adminEmails, emailUsername, emailPassword)
 	if err != nil{
 		logger.Println("Could not initialize email")
 		logger.Panic(err.Error())
