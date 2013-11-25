@@ -88,6 +88,8 @@ func main() {
 	web.Get("/", home)
 	web.Get("/page/terms/?", showTerms)
 	web.Post("/page/generate/", generate)
+	web.Get("/page/report/?", reportLink)
+	web.Post("/page/report/submit/?", submitReport)
 	web.Get("/rsrc/captcha/img/reload/(.+)\\.png", reloadCaptchaImage)
 	web.Get("/rsrc/captcha/img/(.+)\\.png", serveCaptchaImage)
 	web.Get("/rsrc/captcha/audio/(.+)\\.wav", serveCaptchaAudio)
