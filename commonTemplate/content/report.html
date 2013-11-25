@@ -2,7 +2,15 @@
 	<script type="text/javascript">
 		
 		function validateReportForm(){
+			var linkId = $("#linkId").val();
 			
+			if(linkId == ""){
+				customAlert("Error", "You must enter a link to report");
+				return false;
+			}
+			
+			
+			return true;
 		}
 		
 		$(document).ready(function(){
@@ -45,6 +53,7 @@
 			/*color:#0E8A8A;*/
 			color:#A9A9A9;
 			cursor:text;
+			margin-bottom:15px;
 		}
 		
 		#linkId{
@@ -57,13 +66,16 @@
 	<div class="content">
 		<h2>{{.title_text}}</h2>
 		<p>
-			Use this form to report a link that redirects to a page that you feel is inapropriate or violates the terms of service. Reported links will be reviewed and removed at the discretion of {{.app_name}}'s administrators
+			Use this form to report a link that redirects to a page that you feel is inapropriate or violates the <a href="{{.base_url}}page/terms">terms of service</a>. Reported links will be reviewed and removed at the discretion of {{.app_name}}'s administrators.
 		</p>
+		<br/>
 		<div class="form_wrapper">
 			<form id="report_link_form" action="page/report/submit/" method="POST">
+				Link to report:
 				<div id="link_psuedo_input">
-					redu.se/<input id="linkId" name="liknkId" type="text" placeholder="abc" />
+					redu.se/<input id="linkId" name="linkId" type="text" placeholder="abc" />
 				</div>
+				<input type="submit" />
 			</form>
 		</div>
 	</div>

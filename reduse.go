@@ -44,8 +44,8 @@ func main() {
 	dbUsername := os.Getenv("REDUSE_DB_USERNAME")
 	dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
 	
-	
-	
+	emailPassword := os.Getenv("REDUSE_EMAIL_PASSWORD")
+	adminEmails := os.Getenv("REDUSE_EMAIL_ADMIN_ADDRESSES")
 	
 	//Set up logging to stdout
 	logger = log.New(os.Stdout, "", log.Lshortfile)
@@ -71,6 +71,13 @@ func main() {
 		return
 	}
 	
+	err = initEmail(adminEmails, emailPassword)
+	if err != nil{
+		logger.Println("Could not initialize email")
+		logger.Panic(err.Error())
+		return
+	}
+	
 	//Past this point, we should not have any panic()'s, rather any and all errors should be handled gracefully
 	
 	//don't do any of this stuff if we are in development mode (ie. production-only initialization goes here)
@@ -82,6 +89,8 @@ func main() {
 		agent.NewrelicName = "Redu.se"
 		agent.Run()
 	}
+	
+	
 	
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	

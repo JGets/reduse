@@ -526,5 +526,15 @@ func reportLink(ctx *web.Context){
 
 func submitReport(ctx *web.Context){
 	//TODO: implement actual reporting/flagging/emailing of reported link
-	commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Report A Link", "body_text":"This functionality is yet to be implemented"})
+	//commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Report A Link", "body_text":"This functionality is yet to be implemented"})
+	
+	linkId := ctx.Params["linkId"]
+	
+	err := sendEmailToAdmins("Link Reported", "The link " + linkId + " was reported.")
+	if err != nil{
+		internalError(ctx, err)
+		return
+	}
+	
+	commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Thank You", "body_text":"Your report was submitted"})
 }
