@@ -76,6 +76,7 @@ input[type="text"]{
 	padding:3px;
 	background:transparent;
 	border:1px #0E8A8A solid;
+	font-size:14pt;
 }
 
 input[type="text"]::selection{
@@ -225,4 +226,9 @@ input[type="text"]::-moz-selection{
 	-e-border-radius: 3px;
 	border-radius: 3px;
 	margin:5px 0px 0px 0px;
+}
+
+
+.form_wrapper{
+	text-align:center;
 }

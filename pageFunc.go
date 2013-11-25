@@ -518,3 +518,13 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 		error404(ctx, hash)
 	}
 }
+
+
+func reportLink(ctx *web.Context){
+	commonTemplate(ctx, "report.html", map[string]string{"title_text":"Report A Link"})
+}
+
+func submitReport(ctx *web.Context){
+	//TODO: implement actual reporting/flagging/emailing of reported link
+	commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Report A Link", "body_text":"This functionality is yet to be implemented"})
+}

@@ -1,0 +1,70 @@
+{{define "common_content"}}
+	<script type="text/javascript">
+		
+		function validateReportForm(){
+			
+		}
+		
+		$(document).ready(function(){
+			$("#link_psuedo_input").click(function(){
+				$("#linkId").focus();
+			});
+			
+			$("#linkId").focus(function(){
+				if($(this).val() == ""){
+					$("#link_psuedo_input").css("color", "#0E8A8A");
+				}
+			});
+			
+			$("#linkId").blur(function(){
+				if($(this).val() == ""){
+					$("#link_psuedo_input").css("color", "#A9A9A9");
+				}
+			});
+			
+			$("#report_link_form").submit(function(event){
+				if(!validateReportForm()){
+					event.preventDefault();
+				}
+			});
+		});
+	</script>
+	<style>
+		#link_psuedo_input{
+			width:400px;
+			margin:auto;
+			padding:3px;
+			background:transparent;
+			-moz-border-radius: 3px;
+			-webkit-border-radius: 3px;
+			-o-border-radius: 3px;
+			-e-border-radius: 3px;
+			border-radius: 3px;
+			border:1px #0E8A8A solid;
+			text-align:left; 
+			/*color:#0E8A8A;*/
+			color:#A9A9A9;
+			cursor:text;
+		}
+		
+		#linkId{
+			border:none;
+			margin:0px;
+			width:325px;
+			padding-left:0px;
+		}
+	</style>
+	<div class="content">
+		<h2>{{.title_text}}</h2>
+		<p>
+			Use this form to report a link that redirects to a page that you feel is inapropriate or violates the terms of service. Reported links will be reviewed and removed at the discretion of {{.app_name}}'s administrators
+		</p>
+		<div class="form_wrapper">
+			<form id="report_link_form" action="page/report/submit/" method="POST">
+				<div id="link_psuedo_input">
+					redu.se/<input id="linkId" name="liknkId" type="text" placeholder="abc" />
+				</div>
+			</form>
+		</div>
+	</div>
+{{end}}
