@@ -13,6 +13,7 @@ const(
 	LINK_START_LENGTH = 5
 	CAPTCHA_MIN_LENGTH = 6
 	CAPTCHA_VARIANCE = 2	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGNTH + CAPTCHA_VARIANCE]
+	NUM_REPORTS_TO_FLAG	= 1	// The number of reports required before a link becomes flagged for review
 )
 
 var DEFAULTS = map[string]string {

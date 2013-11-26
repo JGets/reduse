@@ -7,6 +7,10 @@ import(
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const(
+	TINYINT_MAX = 255
+)
+
 var dsn string
 
 /*
@@ -105,14 +109,15 @@ func db_getLinkTable() (map[string]string, error){
 		hash:	The hash that we are to look for in the DB
 	Returns:
 		string: The link, or an empty string (if there is no entry for the has in the DB, or an error was encountered)
+		int:	The number of reports against the link, or -1 if it does not exist or an error was encountered
 		bool:	false only when there is no row for that hash in the DB, true otherwise (Note: is true even when an error is encountered)
 		error:	Any error that was encountered, or nil
 */
-func db_linkForHash(hash string) (string, bool, error){
+func db_linkForHash(hash string) (string, int, bool, error){
 	//open the database
 	db, err := openDB()
 	if err != nil {
-		return "", true, err
+		return "", -1, true, err
 	}
 	defer db.Close()
 	
@@ -129,24 +134,26 @@ func db_linkForHash(hash string) (string, bool, error){
 		hash:	The hash that we are to look for in the DB
 	Returns:
 		string: The link, or an empty string (if there is no entry for the has in the DB, or an error was encountered)
+		int:	The number of reports against the link, or -1 if it does not exist or an error was encountered
 		bool:	false only when there is no row for that hash in the DB, true otherwise (Note: is true even when an error is encountered)
 		error:	Any error that was encountered, or nil
 */
-func db_linkForHashHelper(db *sql.DB, hash string) (string, bool, error){
+func db_linkForHashHelper(db *sql.DB, hash string) (string, int, bool, error){
 	var link string
-	err := db.QueryRow("SELECT link FROM links WHERE hash=?", hash).Scan(&link)
+	var numReports int
+	err := db.QueryRow("SELECT link, numReports FROM links WHERE hash=?", hash).Scan(&link, &numReports)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
 				//If we got an error say there was no row, return that no entry exists for this hash, but don't return the error
-				return "", false, nil
+				return "", -1, false, nil
 			} else {
 				//any other error, just return an error
-				return "", true, err
+				return "", -1, true, err
 			}
 	}
 	
-	return link, true, nil
+	return link, numReports, true, nil
 }
 
 /*
@@ -180,7 +187,7 @@ func db_addLink(hash, url string) error {
 */
 func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 	//Check to make sure we aren't trying to add a conflicting link row to the database
-	exLink, exists, err := db_linkForHashHelper(db, hash)
+	exLink, _, exists, err := db_linkForHashHelper(db, hash)
 	if err != nil {
 		return err
 	} else if exists {
@@ -242,4 +249,60 @@ func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 //	
 // 	return false, nil
 // }
+
+
+/*
+	Increments the number of reports against a link in the database
+	Parameters:
+		hash:	The short hash of the link that was reported
+	Returns:
+		int:	The new number of reports against the link, or -1 if an error was encountered
+		error:	Any error that was encountered, or nil
+*/
+func db_incrementReportCount(hash string) (int, error){
+	db, err := openDB()
+	if err != nil {
+		return -1, err
+	}
+	defer db.Close()
+	
+	return db_incrementReportCountHelper(db, hash)
+}
+
+/*
+	Increments the number of reports against a link in the given database
+	Parameters:
+		db:		The database interface to use
+		hash:	The short hash of the link that was reported
+	Returns:
+		int:	The new number of reports against the link, or -1 if an error was encountered
+		error:	Any error that was encountered, or nil
+*/
+func db_incrementReportCountHelper(db *sql.DB, hash string) (int, error){
+	_, numReports, exists, err := db_linkForHashHelper(db, hash)
+	if err != nil{
+		return -1, err
+	} else if !exists {
+		return -1, errors.New("Trying to increment report count for link that does not exist")
+	}
+	
+	//make sure not to overflow the numReports value in the DB (ie. don't increment it if it's already at the max)
+	if numReports >= TINYINT_MAX-1 {
+		return -1, nil
+	}
+	
+	//Prepare the update query
+	stmt, err := db.Prepare("UPDATE links SET numReports=? WHERE hash=?")
+	if err != nil {
+		return -1, err
+	}
+	
+	//excecute the insert query
+	_, err = stmt.Exec(numReports+1, hash)
+	if err != nil {
+		return -1, err
+	}
+	
+	return numReports+1, nil
+}
 

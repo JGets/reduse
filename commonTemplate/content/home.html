@@ -132,6 +132,18 @@
 			// }
 			
 			
+			//verify the captcha field
+			if(!validateCaptcha()){
+				return false;
+			}
+			
+			
+			//document.getElementById("shorten_form").submit();
+			
+			return true;
+		}
+		
+		function validateCaptcha() {
 			var capSoln = document.getElementById("captcha_soln").value;
 			var c_minLength = parseInt({{.captcha_soln_min_length}});
 			var c_maxLength = parseInt({{.captcha_soln_max_length}});
@@ -152,11 +164,10 @@
 				return false;
 			}
 			
-			
-			//document.getElementById("shorten_form").submit();
-			
-			return true;
+			return true
 		}
+		
+		
 		
 		var captchaAudioIsPlaying = false;
 		function reloadCaptcha(){
