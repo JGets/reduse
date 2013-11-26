@@ -339,33 +339,46 @@ func validateURL(urlStr string) (string, bool, error){
 		soln:	the solution the user submitted to the CAPTCHA
 	Returns:
 		bool:	true if the user entered a correct solution, false otherwise.
+		string:	A string containing the error text as to why the solution was not accepted, or nil
+		error:	Any error that was encountered
 */
-func goodCaptchaSolution(ctx *web.Context, id, soln string) bool {
+func goodCaptchaSolution(ctx *web.Context, id, soln string) (bool, string, error) {
+	// //make sure we were given a non-empty ID
+	// if id == "" {
+	// 	internalError(ctx, errors.New("Attempting to verify CAPTCHA with empty ID"))
+	// 	return false
+	// } else if soln == "" {		//Make sure they actually answered the CAPTCHA
+	// 	commonTemplate(ctx,
+	// 				   "generic.html",
+	// 				   map[string]string{"title_text":"Incorrect CAPTCHA",
+	// 		 							 "body_text":"You must enter a solution to the CAPTCHA to generate a short link",
+	// 		 							 "show_try_again":"true",
+	// 		 							 "user_url":ctx.Params["url"],
+	// 		 							 })
+	// 	return false
+	// } else if !captcha.VerifyString(ctx.Params["captcha_id"], soln) {	//They didn't give a correct solution
+	// 	commonTemplate(ctx,
+	// 				   "generic.html",
+	// 				   map[string]string{"title_text":"Incorrect CAPTCHA",
+	// 		 							 "body_text":"The solution to the CAPTCHA that you entered was incorrect",
+	// 		 							 "show_try_again":"true",
+	// 		 							 "user_url":ctx.Params["url"],
+	// 		 							 })
+	// 	return false
+	// }
+	// //The user gave us a correct solution to the CAPTCHA
+	// return true
+	
 	//make sure we were given a non-empty ID
 	if id == "" {
-		internalError(ctx, errors.New("Attempting to verify CAPTCHA with empty ID"))
-		return false
+		return false, "INTERNAL ERROR", errors.New("Attempting to verify CAPTCHA with empty ID")
 	} else if soln == "" {		//Make sure they actually answered the CAPTCHA
-		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Incorrect CAPTCHA",
-			 							 "body_text":"You must enter a solution to the CAPTCHA to generate a short link",
-			 							 "show_try_again":"true",
-			 							 "user_url":ctx.Params["url"],
-			 							 })
-		return false
+		return false, "You must enter a solution to the CAPTCHA to generate a short link", nil
 	} else if !captcha.VerifyString(ctx.Params["captcha_id"], soln) {	//They didn't give a correct solution
-		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Incorrect CAPTCHA",
-			 							 "body_text":"The solution to the CAPTCHA that you entered was incorrect",
-			 							 "show_try_again":"true",
-			 							 "user_url":ctx.Params["url"],
-			 							 })
-		return false
+		return false, "The solution to the CAPTCHA that you entered was incorrect", nil
 	}
 	//The user gave us a correct solution to the CAPTCHA
-	return true
+	return true, "", nil
 }
 
 /*
@@ -382,9 +395,22 @@ func generate(ctx *web.Context){
 	//Verify the user's CAPTCHA solution
 	capId := ctx.Params["captcha_id"]
 	capSoln := ctx.Params["captcha_soln"]
-	if !goodCaptchaSolution(ctx, capId, capSoln) {
+	goodCapSoln, reason, err := goodCaptchaSolution(ctx, capId, capSoln)
+	if err != nil {
+		internalError(ctx, err)
+		return
+	} else if !goodCapSoln {
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Incorrect CAPTCHA",
+			 							 "body_text":reason,
+			 							 "show_try_again":"true",
+			 							 "user_url":ctx.Params["url"],
+			 							 })
 		return
 	}
+	
+	
 	
 	urlStr := ctx.Params["url"]
 	
@@ -426,7 +452,7 @@ func generate(ctx *web.Context){
 		testHash = hashStr[:i]
 		
 		//Check if this shorthash already exists in the database
-		val, exists, err := db_linkForHash(testHash)
+		val, _, exists, err := db_linkForHash(testHash)
 		if err != nil {
 			internalError(ctx, errors.New("Database Error: "+err.Error()))
 			return
@@ -488,31 +514,59 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 	upperHash := strings.ToUpper(hash)
 	
 	//Check to see if a link exists for the given hash
-	link, exists, err := db_linkForHash(upperHash)
+	link, numReports, exists, err := db_linkForHash(upperHash)
 	if err != nil {
 		//There was an error in the database
 		internalError(ctx, errors.New("Database Error: "+err.Error()))
 	} else if exists {
-		//The hash=>link exists
-		redir := link
-		
-		//If there were any path extras passed to us, append them to the redir link
-		if extras != "" {
-			redir += "/" + extras
-		}
-		
-		//If there are any GET parameters being passed to us, append them to the redir link
-		if len(ctx.Params) > 0 {
-			params := "?"
-			for k, v := range ctx.Params {
-				params += k + "=" + v + "&"
+		//Check to see if the link has been flagged for review
+		if numReports >= NUM_REPORTS_TO_FLAG {
+			
+			redir := link
+			
+			//If there were any path extras passed to us, append them to the redir link
+			if extras != "" {
+				redir += "/" + extras
 			}
-			//remove the trailing ampersand and append to the redir link
-			redir += strings.TrimSuffix(params, "&")
-		}
-		
-		//if the hash exists in the link table, issue a '302 Found' to the client with the link URL
-		ctx.Redirect(302, redir)	
+			
+			//If there are any GET parameters being passed to us, append them to the redir link
+			if len(ctx.Params) > 0 {
+				params := "?"
+				for k, v := range ctx.Params {
+					params += k + "=" + v + "&"
+				}
+				//remove the trailing ampersand and append to the redir link
+				redir += strings.TrimSuffix(params, "&")
+			}
+			
+			commonTemplate(ctx,
+						   "flaggedLink.html",
+						   map[string]string{"link_hash":hash,
+						   					 "destination_url":redir,
+						 					 })
+			
+		} else {
+			//The hash=>link exists
+			redir := link
+			
+			//If there were any path extras passed to us, append them to the redir link
+			if extras != "" {
+				redir += "/" + extras
+			}
+			
+			//If there are any GET parameters being passed to us, append them to the redir link
+			if len(ctx.Params) > 0 {
+				params := "?"
+				for k, v := range ctx.Params {
+					params += k + "=" + v + "&"
+				}
+				//remove the trailing ampersand and append to the redir link
+				redir += strings.TrimSuffix(params, "&")
+			}
+			
+			//if the hash exists in the link table, issue a '302 Found' to the client with the link URL
+			ctx.Redirect(302, redir)
+		}	
 	} else {
 		//No link exists for the hash, so serve a '404 Not Found' error page
 		error404(ctx, hash)
@@ -522,7 +576,19 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 
 func reportLink(ctx *web.Context){
 	//TODO: add CAPTCHA serving
-	commonTemplate(ctx, "report.html", map[string]string{"title_text":"Report A Link"})
+	
+	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE]
+	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
+	
+	
+	commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":captchaId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":ctx.Params["url"],
+									 })
 }
 
 func submitReport(ctx *web.Context){
@@ -532,11 +598,61 @@ func submitReport(ctx *web.Context){
 	
 	linkId := ctx.Params["linkId"]
 	
-	err := sendEmailToAdmins("Link Reported", "The link " + linkId + " was reported.")
-	if err != nil{
+	
+	//Verify the user's CAPTCHA solution
+	capId := ctx.Params["captcha_id"]
+	capSoln := ctx.Params["captcha_soln"]
+	goodCapSoln, reason, err := goodCaptchaSolution(ctx, capId, capSoln)
+	if err != nil {
 		internalError(ctx, err)
+		return
+	} else if !goodCapSoln {
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Incorrect CAPTCHA",
+			 							 "body_text":reason,
+			 							 "show_try_again":"true",
+			 							 "try_again_path":"page/report/",
+			 							 "user_url":linkId,
+			 							 })
 		return
 	}
 	
+	//make the hash all uppercase
+	upperHash := strings.ToUpper(linkId)
+	
+	//Check to see if a link exists for the given hash
+	_, _, exists, err := db_linkForHash(upperHash)
+	if err != nil {
+		//There was an error in the database
+		internalError(ctx, errors.New("Database Error: "+err.Error()))
+		return
+	} else if !exists {	//The link doesn't exist
+		bStr := "The link redu.se/" + linkId + " does not exist." 
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Link Does Not Exist",
+			 							 "body_text":bStr,
+			 							 })
+		return
+	}
+	
+	//Attempt to increment the report count for the given link
+	numReports, err := db_incrementReportCount(upperHash)
+	if err != nil {
+		internalError(ctx, errors.New("Database Error: " + err.Error()))
+		return
+	}
+	
+	//If the number of reports has increased over the flag point, send an email to the admins
+	if numReports >= NUM_REPORTS_TO_FLAG {
+		err = sendEmailToAdmins("Link Reported", "The link " + linkId + " was reported.")
+		if err != nil{
+			internalError(ctx, err)
+			return
+		}
+	}
+	
+	//Tell the user that their report has been recieved
 	commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Thank You", "body_text":"Your report was submitted"})
 }

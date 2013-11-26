@@ -10,7 +10,52 @@
 			}
 			
 			
+			if(!validateCaptcha()){
+				return false;
+			}
+			
+			
 			return true;
+		}
+		
+		function validateCaptcha() {
+			var capSoln = document.getElementById("captcha_soln").value;
+			var c_minLength = parseInt({{.captcha_soln_min_length}});
+			var c_maxLength = parseInt({{.captcha_soln_max_length}});
+			
+			if(capSoln == ""){
+				customAlert("Error", "You must enter a solution to the CAPTCHA");
+				return false;
+			} else if(capSoln.length < c_minLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too short");
+				return false;
+			} else if(capSoln.length > c_maxLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too long");
+				return false;
+			}
+			
+			if(capSoln.search("[^0-9]") != -1){
+				customAlert("Error", "A CAPTCHA solution contains only numbers (0-9)");
+				return false;
+			}
+			
+			return true
+		}
+		
+		function reloadCaptcha(){
+			document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
+			document.getElementById("captcha_soln").value = "";
+		}
+		
+		function removePrefix(){
+			val = document.getElementById("linkId").value;
+			
+			document.getElementById("linkId").value = val.replace(/(http:\/\/)?redu\.se\//i, "");
+			
+			// var regex = new RegExp("(http://)?redu\\.se/.*", "gi");
+			// if(regex.test(val)){
+			// 	document.getElementById("linkId").value = val.toLowerCase().replace(/(http:\/\/)?redu\\.se/gi, "");
+			// }
 		}
 		
 		$(document).ready(function(){
@@ -18,10 +63,18 @@
 				$("#linkId").focus();
 			});
 			
+			{{if .user_url}} {{/* If we were given a url parameter, show the CAPTCHA form once the page is ready */}}
+				$(".captcha_form").slideDown(500);
+				$("#link_psuedo_input").css("color", "#0E8A8A");
+			{{end}}
+			
 			$("#linkId").focus(function(){
+				$(".captcha_form").slideDown(500);
+				
 				if($(this).val() == ""){
 					$("#link_psuedo_input").css("color", "#0E8A8A");
 				}
+				
 			});
 			
 			$("#linkId").blur(function(){
@@ -35,6 +88,7 @@
 					event.preventDefault();
 				}
 			});
+			
 		});
 	</script>
 	<style>
@@ -62,6 +116,11 @@
 			width:325px;
 			padding-left:0px;
 		}
+		
+		#report_link_form{
+			width:400px;
+			margin:auto;
+		}
 	</style>
 	<div class="content">
 		<h2>{{.title_text}}</h2>
@@ -73,7 +132,19 @@
 			<form id="report_link_form" action="page/report/submit/" method="POST">
 				Link to report:
 				<div id="link_psuedo_input">
-					redu.se/<input id="linkId" name="linkId" type="text" placeholder="abc" />
+					redu.se/<input id="linkId" name="linkId" type="text" placeholder="abc" value="{{.user_url}}" oninput="removePrefix();" autocomplete="off" />
+				</div>
+				<div class="captcha_form">
+					<div id="captcha_image_wrapper">
+						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
+						<div id="captcha_options_wrapper">
+							<div id="captcha_reload_wrapper">
+								<a class="captcha_option_button" onclick="reloadCaptcha();"><i class="fa fa-repeat captcha_option_icon"></i></a>
+							</div>
+						</div>
+					</div>
+					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
+					<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 				</div>
 				<input type="submit" />
 			</form>
