@@ -575,8 +575,6 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 
 
 func reportLink(ctx *web.Context){
-	//TODO: add CAPTCHA serving
-	
 	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE]
 	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 	
@@ -593,7 +591,6 @@ func reportLink(ctx *web.Context){
 
 func submitReport(ctx *web.Context){
 	//TODO: implement actual reporting/flagging/emailing of reported link
-	//TODO: add CAPTCHA verification
 	//TODO: add verification that the reported link actually exists
 	
 	linkId := ctx.Params["linkId"]
