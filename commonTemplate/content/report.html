@@ -17,12 +17,25 @@
 			
 			
 			var comm = $("#report_comment").val()
-			if(reason == "TAKEDOWN_REQUEST"){
-				 if(comm == null || comm == "" || comm.replace(/( |\n|^qwerty$|^(foo|bar|foobar|[0-9]+|[asdfjkl;]+)$)/gi, "").length == 0){
-				 	customAlert("Error", "You must provide a reason in the comment section as to why you would like this link to be removed.");
-				 	return false;
-				 }
-			}
+			if(comm == null || comm == "" || comm.replace(/( |\t|\n)/g, "").length == 0){
+				//The comment field was empty
+				customAlert("Error", "You must provide a reason in the comment section as to why you are reporting this link.");
+				return false;
+			} else if (comm.replace(/(^((qwerty)+|(foo|bar)+|[0-9asdfjkl; ]+)$|lorem( ipsum)?)/gi, "").length == 0){
+				//The comment field is just full of random text
+				
+				if(comm.search(/lorem( ipsum)?/gi) >= 0){
+					customAlert("Error", "It looks like you have entered random text into the<br/>comment field.<br/><br/>Please provide a reason as to why you are reporting this link.<br/><br/>Tip: Don't put <em>Lorem ipsum ...</em> in your comment.");
+				}
+				else{
+					customAlert("Error", "It looks like you have entered random text into the<br/>comment field.<br/><br/>Please provide a reason as to why you are reporting this link.");
+				}
+				return false;
+			}/* else if (comm.replace(/( |\t|\n)/g, "").length < 10){
+				//The comment field has less than 10 non-whitespace characters (ie. they haven't said enough)
+				customAlert("Error", "Please be more descriptive as to why you are reporting this link");
+				return false;
+			}*/
 			
 			if(!validateCaptcha()){
 				return false;
