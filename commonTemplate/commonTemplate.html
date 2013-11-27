@@ -43,18 +43,18 @@
 	</head>
 	<body>
 		<div class="wrapper">
-			<header class="header">
-				<h1 class="app_title">
-					<a href="{{.base_url}}" id="title_link">{{.app_name}}</a>
-				</h1>
-			</header>
-			
-			{{template "common_content" .}}
-			
-			<!-- <div style="position:absolute; width:1000px; height:200px; bottom:0px;">
-				<a href="#" onclick="customAlert('Test', 'Test Text');">TEST</a>
-			</div> -->
-			
+			<div class="container">
+				<header class="header">
+					<h1 class="app_title">
+						<a href="{{.base_url}}" id="title_link">{{.app_name}}</a>
+					</h1>
+				</header>
+				{{template "common_content" .}}
+				
+				<!-- <div style="position:absolute; width:1000px; height:200px; bottom:0px;">
+					<a href="#" onclick="customAlert('Test', 'Test Text');">TEST</a>
+				</div> -->
+			</div>
 			<footer class="footer">
 				<a href="page/report/">Report A Link</a><br/>
 				{{.app_name}} is open source, check it out <a class="link" href="https://github.com/JGets/reduse">here</a><br/>

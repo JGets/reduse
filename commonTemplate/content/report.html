@@ -9,6 +9,20 @@
 				return false;
 			}
 			
+			var reason = $("#reportReason").val()
+			if(reason == null || reason == ""){
+				customAlert("Error", "You must select a reason as to why you are reporting this link");
+				return false;
+			}
+			
+			
+			var comm = $("#report_comment").val()
+			if(reason == "TAKEDOWN_REQUEST"){
+				 if(comm == null || comm == "" || comm.replace(/( |\n|^qwerty$|^(foo|bar|foobar|[0-9]+|[asdfjkl;]+)$)/gi, "").length == 0){
+				 	customAlert("Error", "You must provide a reason in the comment section as to why you would like this link to be removed.");
+				 	return false;
+				 }
+			}
 			
 			if(!validateCaptcha()){
 				return false;
@@ -59,41 +73,42 @@
 		}
 		
 		$(document).ready(function(){
+			//If the user clicks on the part of the link input field that is actually a div, put focus on the input element
 			$("#link_psuedo_input").click(function(){
 				$("#linkId").focus();
 			});
 			
-			{{if .user_url}} {{/* If we were given a url parameter, show the CAPTCHA form once the page is ready */}}
-				$(".captcha_form").slideDown(500);
-				$("#link_psuedo_input").css("color", "#0E8A8A");
-			{{end}}
-			
+			//Change the colour of the placeholder text on the link field depending on it's value
 			$("#linkId").focus(function(){
-				$(".captcha_form").slideDown(500);
-				
 				if($(this).val() == ""){
 					$("#link_psuedo_input").css("color", "#0E8A8A");
 				}
 				
 			});
-			
 			$("#linkId").blur(function(){
 				if($(this).val() == ""){
 					$("#link_psuedo_input").css("color", "#A9A9A9");
 				}
 			});
 			
+			
+			//validate the form when the user hits the submit button
 			$("#report_link_form").submit(function(event){
 				if(!validateReportForm()){
 					event.preventDefault();
 				}
 			});
 			
+			
+			{{if .user_url}} {{/* If we were given a url parameter, change the colour in the link input field */}}
+				$("#link_psuedo_input").css("color", "#0E8A8A");
+			{{end}}
+			
 		});
 	</script>
 	<style>
 		#link_psuedo_input{
-			width:400px;
+			width:392px;
 			margin:auto;
 			padding:3px;
 			background:transparent;
@@ -113,13 +128,19 @@
 		#linkId{
 			border:none;
 			margin:0px;
-			width:325px;
+			width:317px;
 			padding-left:0px;
 		}
 		
 		#report_link_form{
 			width:400px;
 			margin:auto;
+		}
+		
+		#report_comment{
+			width:392px;
+			height:40pt;
+			resize:none;
 		}
 	</style>
 	<div class="content">
@@ -133,6 +154,19 @@
 				<div id="link_psuedo_input">
 					redu.se/<input id="linkId" name="linkId" type="text" placeholder="abc" value="{{.user_url}}" oninput="removePrefix();" autocomplete="off" />
 				</div>
+				<div class="select_wrapper">
+					<div class="select_arrow">
+						<i class="fa fa-angle-double-down"></i>
+					</div>
+					<select id="reportReason" name="reportReason">
+						<option value="" selected="selected" disabled="disabled">Select A Reason ...</option>
+						<option value="SPAM">Spam</option>
+						<option value="ILLEGAL">Illegal Content</option>
+						<option value="MORALLY_OBJECTIONABLE">Morally Objectionable Content</option>
+						<option value="TAKEDOWN_REQUEST">Takedown Request (Elaborate Below)</option>
+					</select>
+				</div>
+				<textarea id="report_comment" name="report_comment" placeholder="Enter any comments here (max. 500 characters)" maxlength="500"></textarea>
 				<div class="captcha_form">
 					<div id="captcha_image_wrapper">
 						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
@@ -145,7 +179,7 @@
 					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
 					<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 				</div>
-				<input type="submit" />
+				<input type="submit" value="Submit" />
 			</form>
 		</div>
 	</div>
