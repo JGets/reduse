@@ -11,6 +11,7 @@ const(
 	TINYINT_MAX = 255
 )
 
+
 var dsn string
 
 /*
@@ -304,5 +305,21 @@ func db_incrementReportCountHelper(db *sql.DB, hash string) (int, error){
 	}
 	
 	return numReports+1, nil
+}
+
+/*
+	Adds a link report into the database
+	Parameters:
+		hash:	The short hash of the link that was reported
+		type:	
+*/
+func db_addReport(hash string, type ReportType, comment string) (int, bool, error){
+	db, err := openDB()
+	if err != nil {
+		return -1, false, err
+	}
+	defer db.Close()
+	
+	//TODO: implement
 }
 
