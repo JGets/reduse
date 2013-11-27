@@ -590,8 +590,9 @@ func reportLink(ctx *web.Context){
 }
 
 func submitReport(ctx *web.Context){
-	//TODO: implement actual reporting/flagging/emailing of reported link
-	//TODO: add verification that the reported link actually exists
+	//TODO: add 'reports' table to database
+	//TODO:	add server-side support for report reason/comment
+	//TODO?: add reasons as to why a link has been flagged to alert page (in serveLink) 
 	
 	linkId := ctx.Params["linkId"]
 	
