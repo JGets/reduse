@@ -594,12 +594,63 @@ func submitReport(ctx *web.Context){
 	//TODO:	add server-side support for report reason/comment
 	//TODO?: add reasons as to why a link has been flagged to alert page (in serveLink) 
 	
+	capId := ctx.Params["captcha_id"]
+	capSoln := ctx.Params["captcha_soln"]
+	
 	linkId := ctx.Params["linkId"]
+	reportTypeString := ctx.Params["reportReason"]
+	comment := ctx.Params["report_comment"]
+	
+	//Make sure the user filled out the form
+	if linkId == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must provide a link to report.",
+									 })
+		return
+	} else if reportTypeString == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must select a reason that you are reporting this link.",
+									 })
+		return
+	} else if comment == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must provide a comment as to why you are reporting this link.",
+									 })
+		return
+	} else if capSoln == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must provide a solution to the CAPTCHA",
+									 })
+		return
+	}
+	
 	
 	
 	//Verify the user's CAPTCHA solution
-	capId := ctx.Params["captcha_id"]
-	capSoln := ctx.Params["captcha_soln"]
 	goodCapSoln, reason, err := goodCaptchaSolution(ctx, capId, capSoln)
 	if err != nil {
 		internalError(ctx, err)
@@ -619,7 +670,7 @@ func submitReport(ctx *web.Context){
 	//make the hash all uppercase
 	upperHash := strings.ToUpper(linkId)
 	
-	//Check to see if a link exists for the given hash
+	/*//Check to see if a link exists for the given hash
 	_, _, exists, err := db_linkForHash(upperHash)
 	if err != nil {
 		//There was an error in the database
@@ -640,7 +691,25 @@ func submitReport(ctx *web.Context){
 	if err != nil {
 		internalError(ctx, errors.New("Database Error: " + err.Error()))
 		return
+	}*/
+	
+	rep := NewReport(upperHash, ReportTypeForString(reportTypeString), comment)
+	
+	numReports, exists, err := db_addReport(rep)
+	if err != nil {
+		internalError(ctx, err)
+	} else if !exists {
+		bStr := "The link redu.se/" + linkId + " does not exist." 
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Link Does Not Exist",
+			 							 "body_text":bStr,
+			 							 })
+		return
 	}
+	
+	
+	
 	
 	//If the number of reports has increased over the flag point, send an email to the admins
 	if numReports >= NUM_REPORTS_TO_FLAG {

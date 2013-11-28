@@ -4,6 +4,8 @@ import(
 	"errors"
 	"database/sql"
 	// "strings"
+	"time"
+	
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -310,16 +312,72 @@ func db_incrementReportCountHelper(db *sql.DB, hash string) (int, error){
 /*
 	Adds a link report into the database
 	Parameters:
-		hash:	The short hash of the link that was reported
-		type:	
+		report:	A pointer to the Report struct containing the report information we want to add to the DB
+	Returns:
+		int:	The number of reports that the link this report relates to has accrued
+		bool:	true if the link exists in the database, false otherwise (independant of wheter any errors were encountered)
+		error:	Any error that was encountered, or nil
+	NOTE:
+		Returns (-1, false, someError) when an error is encountered, but returns (-1, false, nil) when the link does not exist in the DB.
 */
-func db_addReport(hash string, type ReportType, comment string) (int, bool, error){
+func db_addReport(report *Report) (int, bool, error){
 	db, err := openDB()
 	if err != nil {
 		return -1, false, err
 	}
 	defer db.Close()
 	
-	//TODO: implement
+	return db_addReportHelper(db, report)
+}
+
+func db_addReportHelper(db *sql.DB, report *Report) (int, bool, error){
+	//Check to make sure the link actually exists
+	_, numReports, exists, err := db_linkForHashHelper(db, report.Hash)
+	if err != nil{
+		return -1, false, err
+	} else if !exists {
+		return -1, false, nil
+	}
+	
+	
+	//make sure not to overflow the numReports value in the DB (ie. don't increment it if it's already at the max)
+	if numReports < TINYINT_MAX-1 {
+		numReports += 1
+	}
+	
+	
+	
+	/*
+		Attempt to insert a new Report row into the reports table
+	*/
+	stmt, err := db.Prepare("INSERT INTO reports(links_hash, type, comment, date) VALUES(?, ?, ?, ?)")
+	if err != nil{
+		return -1, true, err
+	}
+	var datetimeString = report.Date.Format(time.RFC3339)
+	
+	logger.Printf("Attempting to add new link report to database:\n{\t%v\n\t%v\n\t%v\n\t%v\n}\n", report.Hash, report.Type.String(), report.Comment, datetimeString)
+	
+	
+	_, err = stmt.Exec(report.Hash, report.Type.String(), report.Comment, datetimeString)
+	if err != nil {
+		return -1, true, err
+	}
+	
+	
+	/*
+		Attempt to update the links table for this link with the new number of reports that the link has accrued
+	*/
+	stmt, err = db.Prepare("UPDATE links SET numReports=? WHERE hash=?")
+	if err != nil {
+		return -1, true, err
+	}
+	_, err = stmt.Exec(numReports, report.Hash)
+	if err != nil {
+		return -1, true, err
+	}
+	
+	
+	return numReports, true, nil
 }
 

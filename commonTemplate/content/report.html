@@ -117,6 +117,10 @@
 				$("#link_psuedo_input").css("color", "#0E8A8A");
 			{{end}}
 			
+			{{if .error_msg}}
+				customAlert("Error", {{.error_msg}});
+			{{end}}
+			
 		});
 	</script>
 	<style>

@@ -2,10 +2,10 @@ package main
 
 import(
 	"strings"
+	"time"
 )
 
 type ReportType int
-
 
 const(
 	UNKNOWN ReportType = iota
@@ -15,36 +15,70 @@ const(
 	TAKEDOWN_REQUEST ReportType = iota
 )
 
-
 func ReportTypeForString(str string) ReportType{
+	logger.Printf("ReportTypeForString: '%v'", str)
 	switch strings.ToUpper(str) {
 		case "SPAM":
 			return SPAM
 		case "ILLEGAL":
 			return ILLEGAL
 		case "MORALLY_OBJECTIONABLE":
+			return MORALLY_OBJECTIONABLE
 		case "MORALLY OBJECTIONABLE":
 			return MORALLY_OBJECTIONABLE
 		case "TAKEDOWN_REQUEST":
+			return TAKEDOWN_REQUEST
 		case "TAKEDOWN REQUEST":
 			return TAKEDOWN_REQUEST
 		default:
 			return UNKNOWN
 	}
+	
+	return UNKNOWN
 }
 
 func (rt ReportType) String() string{
 	switch rt{
 		case SPAM:
-			return "Spam"
+			return "SPAM"
 		case ILLEGAL:
-			return "Illegal"
+			return "ILLEGAL"
 		case MORALLY_OBJECTIONABLE:
-			return "Morally Objectionable"
+			return "MORALLY_OBJECTIONABLE"
 		case TAKEDOWN_REQUEST:
-			return "Takedown Request"
+			return "TAKEDOWN_REQUEST"
 		case UNKNOWN:
 		default:
-			return "Unknown"
+			return "UNKNOWN"
 	}
+	
+	return "UNKNOWN"
 }
+
+
+
+type Report struct{
+	Hash string
+	Type ReportType
+	Comment string
+	Date time.Time
+}
+
+
+func NewEmptyReport() *Report{
+	t := time.Now()
+	t.UTC()
+	return &Report{"",  UNKNOWN, "", t}
+}
+
+func NewReport(hash string, rtype ReportType, comment string) *Report{
+	t := time.Now()
+	t.UTC()
+	return &Report{hash, rtype, comment, t}
+}
+
+
+
+
+
+
