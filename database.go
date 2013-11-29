@@ -13,7 +13,6 @@ const(
 	TINYINT_MAX = 255
 )
 
-
 var dsn string
 
 /*
