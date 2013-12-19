@@ -77,13 +77,11 @@ func main() {
 	if !devMode {
 		//Set up the NewRelic agent
 		agent := gorelic.NewAgent()
-		// agent.Verbose = true
 		agent.NewrelicLicense = os.Getenv("REDUSE_NEWRELIC_LICENSE_KEY")
 		agent.NewrelicName = "Redu.se"
 		agent.Run()
 	}
 	
-	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
 	web.Get("/", home)
 	web.Get("/page/terms/?", showTerms)
@@ -93,7 +91,7 @@ func main() {
 	web.Get("/rsrc/captcha/audio/(.+)\\.wav", serveCaptchaAudio)
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
-	web.Run(serverAddressWithPort)
+	web.Run(":" + port)
 }
 
 
