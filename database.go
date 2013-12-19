@@ -11,6 +11,7 @@ import(
 
 const(
 	TINYINT_MAX = 255
+	//TIMESTAMP_FORMAT = time.RFC3339
 )
 
 var dsn string
@@ -379,4 +380,62 @@ func db_addReportHelper(db *sql.DB, report *Report) (int, bool, error){
 	
 	return numReports, true, nil
 }
+
+
+func db_reportsForHash(hash string) ([]Report, error){
+	db, err := openDB()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	
+	return db_reportsForHashHelper(db, hash)
+}
+
+func db_reportsForHashHelper(db *sql.DB, hash string) ([]Report, error){
+	//Check to make sure the link actually exists
+	_, _, exists, err := db_linkForHashHelper(db, hash)
+	if err != nil{
+		return nil, err
+	} else if !exists {
+		return nil, errors.New("Attempting to retrieve reports for non-existing link")
+	}
+	
+	// stmt, err := db.Prepare("SELECT links_hash, type, comment, date FROM reports WHERE links_hash=?")
+	
+	ret := make([]Report, 0, NUM_REPORTS_TO_FLAG) //make a slice with initial capacity of the number of reports that cause a flag
+	
+	
+	
+	rows, err := db.Query("SELECT links_hash, type, comment, date FROM reports WHERE links_hash=?", hash)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	for rows.Next() {
+		// var name string
+		var rH, rT, rC, rD string
+		if err := rows.Scan(&rH, &rT, &rC, &rD); err != nil {
+			logger.Fatal(err)
+		}
+		
+		t, err := time.Parse(time.RFC3339, rD)
+		if err != nil{
+			logger.Fatal(err)
+		}
+		
+		rep := Report{rH, ReportTypeForString(rT), rC, t}
+		
+		ret = append(ret, rep) //append this report to the slice
+		
+	}
+	if err := rows.Err(); err != nil {
+		logger.Fatal(err)
+	}
+	
+	
+	return ret, nil
+}
+
+
+
 

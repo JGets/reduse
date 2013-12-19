@@ -539,11 +539,8 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 				redir += strings.TrimSuffix(params, "&")
 			}
 			
-			commonTemplate(ctx,
-						   "flaggedLink.html",
-						   map[string]string{"link_hash":hash,
-						   					 "destination_url":redir,
-						 					 })
+			flaggedLink(ctx, hash, redir)
+			return
 			
 		} else {
 			//The hash=>link exists
@@ -571,6 +568,28 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 		//No link exists for the hash, so serve a '404 Not Found' error page
 		error404(ctx, hash)
 	}
+}
+
+
+func flaggedLink(ctx *web.Context, hash string, target string){
+	
+	upperHash := strings.ToUpper(hash)
+	
+	reports, err := db_reportsForHash(upperHash)
+	if err != nil{
+		internalError(ctx, err)
+	}
+	
+	for _, r := range reports {
+		logger.Println(r)
+	}
+	
+	
+	commonTemplate(ctx,
+						   "flaggedLink.html",
+						   map[string]string{"link_hash":hash,
+						   					 "destination_url":target,
+						 					 })
 }
 
 

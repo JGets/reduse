@@ -41,11 +41,10 @@ h6{
 
 
 .wrapper{
-	/*width:1000px;
-	height:100%;
-	margin:auto;*/
 	position: relative;
+	width:1000px;
 	height:100%;
+	margin:auto;
 }
 
 .container{
