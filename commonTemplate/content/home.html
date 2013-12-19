@@ -215,7 +215,7 @@
 		{{.app_name}} is a simple web application designed to allow you to reduce the size of a URL
 		<div class="generate_form">
 			<form id="shorten_form" action="/page/generate/" method="POST">
-				<input id="url" name="url" type="text" class="text_field" placeholder="Enter A URL Here" value="{{.user_url}}" autocomplete="off" maxlength="2000"/>
+				<input id="url" name="url" type="text" class="text_field" placeholder="Enter A URL Here" value="{{.user_url}}" autocomplete="off" autocapitalize="off" maxlength="2000"/>
 				<div class="captcha_form">
 					<!-- Please prove you're human:<br/> -->
 					
@@ -233,7 +233,7 @@
 					</div>
 					
 					
-					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
+					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" autocapitalize="off" />
 				</div>
 				<!--input type="submit" style="width:0px; height:0px; overflow:hidden; padding:0px; margin:0px; border:none;" /-->
 				<input type="submit" value="{{.app_name}} It!" />
