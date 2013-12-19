@@ -7,10 +7,12 @@ import(
 	"encoding/base32"
 	"strings"
 	"errors"
+	"net"
 	"net/url"
 	"net/http"
 	"math/rand"
 	"strconv"
+	"regexp"
 	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
@@ -65,6 +67,43 @@ func commonTemplate(ctx *web.Context, contentFile string, args map[string]string
 	if err != nil{
 		logger.Println("ERROR: ", err.Error())
 	}
+}
+
+
+func testPage(ctx *web.Context) {
+	rawIP := string(ctx.Request.RemoteAddr)
+	
+	ctx.WriteString("raw: " + rawIP + "<br/>")
+	
+	ip := net.ParseIP(rawIP)
+	
+	ipStr := ip.String()
+	
+	ctx.WriteString("string: " + ipStr + "<br/>")
+	
+}
+
+func testIP(ctx *web.Context, input string) {
+	
+	trimmed, err :=  trimIPAddress(input)
+	
+	if err != nil {
+		ctx.WriteString(err.Error())
+		return
+	}
+	
+	ip := net.ParseIP(trimmed)
+	
+	if ip == nil {
+		ctx.WriteString("Could not parse IP<br/>")
+		ctx.WriteString("Input: " + trimmed)
+		return
+	}
+	
+	ctx.WriteString(ip.String())
+	return
+	
+	
 }
 
 
@@ -608,6 +647,67 @@ func reportLink(ctx *web.Context){
 									 })
 }
 
+
+func trimIPAddress(rawIP string) (string, error) {
+	
+	raw := rawIP
+	
+	//check to see if it matches the format of an IPv6 address
+	isIPv6, err := regexp.MatchString("\\[([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}\\].*", raw)
+	
+	if err != nil {
+		return "", err
+	}
+	if isIPv6 {
+		
+		//check if the IPv6 addr also has a port
+		hasPort, err := regexp.MatchString("\\[.+\\]:.+", raw)
+		if err != nil {
+			return "", err
+		}
+		if hasPort {
+			//and remove the port
+			raw = strings.TrimRight(raw, ":1234567890")
+		}
+		
+		raw = strings.TrimPrefix(raw, "[")
+		raw = strings.TrimSuffix(raw, "]")
+		
+		
+	} else {	
+		//raw = strings.TrimRight(raw, ":1234567890")
+		
+		//check for IPv4 address, with stict port range checking as well
+		isIPv4, err := regexp.MatchString("(([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5])\\.){3}([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5])(:[0-9]+)?", raw)
+		if err != nil {
+			return "", err
+		}
+		if isIPv4 {
+			//less strict IP range check, but see if there is a :PORT on the end
+			hasPort, err := regexp.MatchString("([0-9]{1,3}\\.){3}[0-9]{1,3}:[0-9]+", raw)
+			if err != nil {
+				return "", err
+			}
+			if hasPort {
+				raw = strings.TrimRight(raw, "1234567890")	//trim the port number off the right
+				raw = strings.TrimSuffix(raw, ":")			//and trim the colon (must do seperately, otherwise part of the ip addr will be trimmed too)
+			}
+		}
+	}
+	
+	
+	return raw, nil
+	
+	// ip := net.ParseIP(raw)
+	
+	// if ip == nil {
+	// 	return "", errors.New("Could not parse IP address")
+	// }
+	
+	
+	// return ip.String(), nil
+}
+
 func submitReport(ctx *web.Context){
 	//TODO: add 'reports' table to database
 	//TODO:	add server-side support for report reason/comment
@@ -689,30 +789,16 @@ func submitReport(ctx *web.Context){
 	//make the hash all uppercase
 	upperHash := strings.ToUpper(linkId)
 	
-	/*//Check to see if a link exists for the given hash
-	_, _, exists, err := db_linkForHash(upperHash)
-	if err != nil {
-		//There was an error in the database
-		internalError(ctx, errors.New("Database Error: "+err.Error()))
-		return
-	} else if !exists {	//The link doesn't exist
-		bStr := "The link redu.se/" + linkId + " does not exist." 
-		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Link Does Not Exist",
-			 							 "body_text":bStr,
-			 							 })
-		return
-	}
 	
-	//Attempt to increment the report count for the given link
-	numReports, err := db_incrementReportCount(upperHash)
-	if err != nil {
-		internalError(ctx, errors.New("Database Error: " + err.Error()))
-		return
-	}*/
+	rawIP := string(ctx.Request.RemoteAddr)
 	
-	rep := NewReport(upperHash, ReportTypeForString(reportTypeString), comment)
+	ip := net.ParseIP(rawIP)
+	
+	ipStr := ip.String()
+	
+	
+	
+	rep := NewReport(upperHash, ipStr, ReportTypeForString(reportTypeString), comment)
 	
 	numReports, exists, err := db_addReport(rep)
 	if err != nil {

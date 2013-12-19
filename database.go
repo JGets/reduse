@@ -350,16 +350,16 @@ func db_addReportHelper(db *sql.DB, report *Report) (int, bool, error){
 	/*
 		Attempt to insert a new Report row into the reports table
 	*/
-	stmt, err := db.Prepare("INSERT INTO reports(links_hash, type, comment, date) VALUES(?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO reports(links_hash, ip_addr, type, comment, date) VALUES(?, ?, ?, ?, ?)")
 	if err != nil{
 		return -1, true, err
 	}
 	var datetimeString = report.Date.Format(time.RFC3339)
 	
-	logger.Printf("Attempting to add new link report to database:\n{\t%v\n\t%v\n\t%v\n\t%v\n}\n", report.Hash, report.Type.String(), report.Comment, datetimeString)
+	logger.Printf("Attempting to add new link report to database:\n{\t%v\n\t%v\n\t%v\n\t%v\n\t%v\n}\n", report.Hash, report.OriginIP, report.Type.String(), report.Comment, datetimeString)
 	
 	
-	_, err = stmt.Exec(report.Hash, report.Type.String(), report.Comment, datetimeString)
+	_, err = stmt.Exec(report.Hash, report.OriginIP, report.Type.String(), report.Comment, datetimeString)
 	if err != nil {
 		return -1, true, err
 	}
@@ -407,14 +407,14 @@ func db_reportsForHashHelper(db *sql.DB, hash string) ([]Report, error){
 	
 	
 	
-	rows, err := db.Query("SELECT links_hash, type, comment, date FROM reports WHERE links_hash=?", hash)
+	rows, err := db.Query("SELECT links_hash, ip_addr, type, comment, date FROM reports WHERE links_hash=?", hash)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	for rows.Next() {
 		// var name string
-		var rH, rT, rC, rD string
-		if err := rows.Scan(&rH, &rT, &rC, &rD); err != nil {
+		var rH, rI, rT, rC, rD string
+		if err := rows.Scan(&rH, &rI, &rT, &rC, &rD); err != nil {
 			logger.Fatal(err)
 		}
 		
@@ -423,7 +423,7 @@ func db_reportsForHashHelper(db *sql.DB, hash string) ([]Report, error){
 			logger.Fatal(err)
 		}
 		
-		rep := Report{rH, ReportTypeForString(rT), rC, t}
+		rep := Report{rH, rI, ReportTypeForString(rT), rC, t}
 		
 		ret = append(ret, rep) //append this report to the slice
 		

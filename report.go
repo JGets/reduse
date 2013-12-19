@@ -59,6 +59,7 @@ func (rt ReportType) String() string{
 
 type Report struct{
 	Hash string
+	OriginIP string
 	Type ReportType
 	Comment string
 	Date time.Time
@@ -68,13 +69,13 @@ type Report struct{
 func NewEmptyReport() *Report{
 	t := time.Now()
 	t.UTC()
-	return &Report{"",  UNKNOWN, "", t}
+	return &Report{"", "", UNKNOWN, "", t}
 }
 
-func NewReport(hash string, rtype ReportType, comment string) *Report{
+func NewReport(hash string, ip string, rtype ReportType, comment string) *Report{
 	t := time.Now()
 	t.UTC()
-	return &Report{hash, rtype, comment, t}
+	return &Report{hash, ip, rtype, comment, t}
 }
 
 
