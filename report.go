@@ -67,14 +67,12 @@ type Report struct{
 
 
 func NewEmptyReport() *Report{
-	t := time.Now()
-	t.UTC()
+	t := time.Now().UTC()
 	return &Report{"", "", UNKNOWN, "", t}
 }
 
 func NewReport(hash string, ip string, rtype ReportType, comment string) *Report{
-	t := time.Now()
-	t.UTC()
+	t := time.Now().UTC()
 	return &Report{hash, ip, rtype, comment, t}
 }
 

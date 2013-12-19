@@ -11,7 +11,7 @@ import(
 
 const(
 	TINYINT_MAX = 255
-	//TIMESTAMP_FORMAT = time.RFC3339
+	TIMESTAMP_FORMAT = "2006-01-02 15:04:05"	// YYYY-MM-DD HH:mm:SS
 )
 
 var dsn string
@@ -354,12 +354,15 @@ func db_addReportHelper(db *sql.DB, report *Report) (int, bool, error){
 	if err != nil{
 		return -1, true, err
 	}
+	
+	
 	var datetimeString = report.Date.Format(time.RFC3339)
 	
 	logger.Printf("Attempting to add new link report to database:\n{\t%v\n\t%v\n\t%v\n\t%v\n\t%v\n}\n", report.Hash, report.OriginIP, report.Type.String(), report.Comment, datetimeString)
 	
 	
-	_, err = stmt.Exec(report.Hash, report.OriginIP, report.Type.String(), report.Comment, datetimeString)
+	// _, err = stmt.Exec(report.Hash, report.OriginIP, report.Type.String(), report.Comment, datetimeString)
+	_, err = stmt.Exec(report.Hash, report.OriginIP, report.Type.String(), report.Comment, report.Date)
 	if err != nil {
 		return -1, true, err
 	}
@@ -401,26 +404,22 @@ func db_reportsForHashHelper(db *sql.DB, hash string) ([]Report, error){
 		return nil, errors.New("Attempting to retrieve reports for non-existing link")
 	}
 	
-	// stmt, err := db.Prepare("SELECT links_hash, type, comment, date FROM reports WHERE links_hash=?")
-	
 	ret := make([]Report, 0, NUM_REPORTS_TO_FLAG) //make a slice with initial capacity of the number of reports that cause a flag
-	
 	
 	
 	rows, err := db.Query("SELECT links_hash, ip_addr, type, comment, date FROM reports WHERE links_hash=?", hash)
 	if err != nil {
-		logger.Fatal(err)
+		return nil, err
 	}
 	for rows.Next() {
-		// var name string
 		var rH, rI, rT, rC, rD string
 		if err := rows.Scan(&rH, &rI, &rT, &rC, &rD); err != nil {
-			logger.Fatal(err)
+			return nil, err
 		}
 		
-		t, err := time.Parse(time.RFC3339, rD)
-		if err != nil{
-			logger.Fatal(err)
+		t, err := time.Parse(TIMESTAMP_FORMAT, rD)
+		if err != nil {
+			return nil, err
 		}
 		
 		rep := Report{rH, rI, ReportTypeForString(rT), rC, t}
@@ -429,7 +428,7 @@ func db_reportsForHashHelper(db *sql.DB, hash string) ([]Report, error){
 		
 	}
 	if err := rows.Err(); err != nil {
-		logger.Fatal(err)
+		return nil, err
 	}
 	
 	

@@ -709,8 +709,6 @@ func trimIPAddress(rawIP string) (string, error) {
 }
 
 func submitReport(ctx *web.Context){
-	//TODO: add 'reports' table to database
-	//TODO:	add server-side support for report reason/comment
 	//TODO?: add reasons as to why a link has been flagged to alert page (in serveLink) 
 	
 	capId := ctx.Params["captcha_id"]
@@ -792,10 +790,21 @@ func submitReport(ctx *web.Context){
 	
 	rawIP := string(ctx.Request.RemoteAddr)
 	
-	ip := net.ParseIP(rawIP)
+	trimmedIP, err := trimIPAddress(rawIP)
+	if err != nil {
+		internalError(ctx, err)
+		return
+	}
+	
+	
+	ip := net.ParseIP(trimmedIP)
+	if ip == nil {
+		internalError(ctx, errors.New("Unable to parse client IP address"))
+		return
+	}
+	
 	
 	ipStr := ip.String()
-	
 	
 	
 	rep := NewReport(upperHash, ipStr, ReportTypeForString(reportTypeString), comment)
