@@ -169,7 +169,7 @@
 			<form id="report_link_form" action="page/report/submit/" method="POST">
 				Link to report:
 				<div id="link_psuedo_input">
-					redu.se/<input id="linkId" name="linkId" type="text" placeholder="abc" value="{{.user_url}}" oninput="removePrefix();" autocomplete="off" />
+					redu.se/<input id="linkId" name="linkId" type="text" placeholder="abc" value="{{.user_url}}" oninput="removePrefix();" autocomplete="off" autocapitalize="off" />
 				</div>
 				<div class="select_wrapper">
 					<div class="select_arrow">
@@ -183,7 +183,7 @@
 						<option value="TAKEDOWN_REQUEST">Takedown Request (Elaborate Below)</option>
 					</select>
 				</div>
-				<textarea id="report_comment" name="report_comment" placeholder="Enter any comments here (max. 500 characters)" maxlength="500"></textarea>
+				<textarea id="report_comment" name="report_comment" placeholder="Enter any comments here (max. 500 characters)" maxlength="500" autocomplete="off" autocapitalize="off"></textarea>
 				<div class="captcha_form">
 					<div id="captcha_image_wrapper">
 						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
@@ -193,7 +193,7 @@
 							</div>
 						</div>
 					</div>
-					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" />
+					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" autocapitalize="off" />
 					<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
 				</div>
 				<input type="submit" value="Submit" />
