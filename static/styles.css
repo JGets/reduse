@@ -69,6 +69,7 @@ input[type="submit"]{
 	background-color:#034A4A;
 	color:white;
 	padding:5px 15px;
+	-webkit-appearance: none;
 }
 
 input[type="text"]{
