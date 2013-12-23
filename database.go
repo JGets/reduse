@@ -4,7 +4,14 @@ import(
 	"errors"
 	"database/sql"
 	// "strings"
+	"time"
+	
 	_ "github.com/go-sql-driver/mysql"
+)
+
+const(
+	TINYINT_MAX = 255
+	TIMESTAMP_FORMAT = "2006-01-02 15:04:05"	// YYYY-MM-DD HH:mm:SS
 )
 
 var dsn string
@@ -105,14 +112,15 @@ func db_getLinkTable() (map[string]string, error){
 		hash:	The hash that we are to look for in the DB
 	Returns:
 		string: The link, or an empty string (if there is no entry for the has in the DB, or an error was encountered)
+		int:	The number of reports against the link, or -1 if it does not exist or an error was encountered
 		bool:	false only when there is no row for that hash in the DB, true otherwise (Note: is true even when an error is encountered)
 		error:	Any error that was encountered, or nil
 */
-func db_linkForHash(hash string) (string, bool, error){
+func db_linkForHash(hash string) (string, int, bool, error){
 	//open the database
 	db, err := openDB()
 	if err != nil {
-		return "", true, err
+		return "", -1, true, err
 	}
 	defer db.Close()
 	
@@ -129,24 +137,26 @@ func db_linkForHash(hash string) (string, bool, error){
 		hash:	The hash that we are to look for in the DB
 	Returns:
 		string: The link, or an empty string (if there is no entry for the has in the DB, or an error was encountered)
+		int:	The number of reports against the link, or -1 if it does not exist or an error was encountered
 		bool:	false only when there is no row for that hash in the DB, true otherwise (Note: is true even when an error is encountered)
 		error:	Any error that was encountered, or nil
 */
-func db_linkForHashHelper(db *sql.DB, hash string) (string, bool, error){
+func db_linkForHashHelper(db *sql.DB, hash string) (string, int, bool, error){
 	var link string
-	err := db.QueryRow("SELECT link FROM links WHERE hash=?", hash).Scan(&link)
+	var numReports int
+	err := db.QueryRow("SELECT link, numReports FROM links WHERE hash=?", hash).Scan(&link, &numReports)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
 				//If we got an error say there was no row, return that no entry exists for this hash, but don't return the error
-				return "", false, nil
+				return "", -1, false, nil
 			} else {
 				//any other error, just return an error
-				return "", true, err
+				return "", -1, true, err
 			}
 	}
 	
-	return link, true, nil
+	return link, numReports, true, nil
 }
 
 /*
@@ -180,7 +190,7 @@ func db_addLink(hash, url string) error {
 */
 func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 	//Check to make sure we aren't trying to add a conflicting link row to the database
-	exLink, exists, err := db_linkForHashHelper(db, hash)
+	exLink, _, exists, err := db_linkForHashHelper(db, hash)
 	if err != nil {
 		return err
 	} else if exists {
@@ -242,4 +252,208 @@ func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 //	
 // 	return false, nil
 // }
+
+
+/*
+	Increments the number of reports against a link in the database
+	Parameters:
+		hash:	The short hash of the link that was reported
+	Returns:
+		int:	The new number of reports against the link, or -1 if an error was encountered
+		error:	Any error that was encountered, or nil
+*/
+func db_incrementReportCount(hash string) (int, error){
+	db, err := openDB()
+	if err != nil {
+		return -1, err
+	}
+	defer db.Close()
+	
+	return db_incrementReportCountHelper(db, hash)
+}
+
+/*
+	Increments the number of reports against a link in the given database
+	Parameters:
+		db:		The database interface to use
+		hash:	The short hash of the link that was reported
+	Returns:
+		int:	The new number of reports against the link, or -1 if an error was encountered
+		error:	Any error that was encountered, or nil
+*/
+func db_incrementReportCountHelper(db *sql.DB, hash string) (int, error){
+	_, numReports, exists, err := db_linkForHashHelper(db, hash)
+	if err != nil{
+		return -1, err
+	} else if !exists {
+		return -1, errors.New("Trying to increment report count for link that does not exist")
+	}
+	
+	//make sure not to overflow the numReports value in the DB (ie. don't increment it if it's already at the max)
+	if numReports >= TINYINT_MAX-1 {
+		return -1, nil
+	}
+	
+	//Prepare the update query
+	stmt, err := db.Prepare("UPDATE links SET numReports=? WHERE hash=?")
+	if err != nil {
+		return -1, err
+	}
+	
+	//excecute the insert query
+	_, err = stmt.Exec(numReports+1, hash)
+	if err != nil {
+		return -1, err
+	}
+	
+	return numReports+1, nil
+}
+
+/*
+	Adds a link report into the database
+	Parameters:
+		report:	A pointer to the Report struct containing the report information we want to add to the DB
+	Returns:
+		int:	The number of reports that the link this report relates to has accrued
+		bool:	true if the link exists in the database, false otherwise (independant of wheter any errors were encountered)
+		error:	Any error that was encountered, or nil
+	NOTE:
+		Returns (-1, false, someError) when an error is encountered, but returns (-1, false, nil) when the link does not exist in the DB.
+*/
+func db_addReport(report *Report) (int, bool, error){
+	db, err := openDB()
+	if err != nil {
+		return -1, false, err
+	}
+	defer db.Close()
+	
+	return db_addReportHelper(db, report)
+}
+
+type ReportExistsError struct{
+	Hash string
+	IPAddr string
+}
+func (e ReportExistsError) Error() string{
+	return "A report for link of hash '" + e.Hash + "' already exists from user IP address '" + e.IPAddr + "'"
+}
+
+func db_addReportHelper(db *sql.DB, report *Report) (numReports int, linkExists bool, err error){
+	//Check to make sure the link actually exists
+	_, numReports, exists, err := db_linkForHashHelper(db, report.Hash)
+	if err != nil{
+		return -1, false, err
+	} else if !exists {
+		return -1, false, nil
+	}
+	
+	
+	//check to make sure that a report for this link from the given IP address doesn't already exist
+	reports, err := db_reportsForHashHelper(db, report.Hash)
+	if err != nil {
+		return -1, true, err
+	}
+	for _, v := range reports {
+		if v.OriginIP == report.OriginIP {
+			return -1, true, ReportExistsError{report.Hash, report.OriginIP}
+		}
+	}
+	
+	
+	//make sure not to overflow the numReports value in the DB (ie. don't increment it if it's already at the max)
+	if numReports < TINYINT_MAX-1 {
+		numReports += 1
+	}
+	
+	
+	/*
+		Attempt to insert a new Report row into the reports table
+	*/
+	stmt, err := db.Prepare("INSERT INTO reports(links_hash, ip_addr, type, comment, date) VALUES(?, ?, ?, ?, ?)")
+	if err != nil{
+		return -1, true, err
+	}
+	
+	
+	var datetimeString = report.Date.Format(time.RFC3339)
+	
+	logger.Printf("Attempting to add new link report to database:\n{\t%v\n\t%v\n\t%v\n\t%v\n\t%v\n}\n", report.Hash, report.OriginIP, report.Type.String(), report.Comment, datetimeString)
+	
+	
+	// _, err = stmt.Exec(report.Hash, report.OriginIP, report.Type.String(), report.Comment, datetimeString)
+	_, err = stmt.Exec(report.Hash, report.OriginIP, report.Type.String(), report.Comment, report.Date)
+	if err != nil {
+		return -1, true, err
+	}
+	
+	
+	/*
+		Attempt to update the links table for this link with the new number of reports that the link has accrued
+	*/
+	stmt, err = db.Prepare("UPDATE links SET numReports=? WHERE hash=?")
+	if err != nil {
+		return -1, true, err
+	}
+	_, err = stmt.Exec(numReports, report.Hash)
+	if err != nil {
+		return -1, true, err
+	}
+	
+	
+	return numReports, true, nil
+}
+
+
+func db_reportsForHash(hash string) ([]Report, error){
+	db, err := openDB()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	
+	return db_reportsForHashHelper(db, hash)
+}
+
+func db_reportsForHashHelper(db *sql.DB, hash string) ([]Report, error){
+	//Check to make sure the link actually exists
+	_, _, exists, err := db_linkForHashHelper(db, hash)
+	if err != nil{
+		return nil, err
+	} else if !exists {
+		return nil, errors.New("Attempting to retrieve reports for non-existing link")
+	}
+	
+	ret := make([]Report, 0, NUM_REPORTS_TO_FLAG) //make a slice with initial capacity of the number of reports that cause a flag
+	
+	
+	rows, err := db.Query("SELECT links_hash, ip_addr, type, comment, date FROM reports WHERE links_hash=?", hash)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var rH, rI, rT, rC, rD string
+		if err := rows.Scan(&rH, &rI, &rT, &rC, &rD); err != nil {
+			return nil, err
+		}
+		
+		t, err := time.Parse(TIMESTAMP_FORMAT, rD)
+		if err != nil {
+			return nil, err
+		}
+		
+		rep := Report{rH, rI, ReportTypeForString(rT), rC, t}
+		
+		ret = append(ret, rep) //append this report to the slice
+		
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	
+	
+	return ret, nil
+}
+
+
+
 

@@ -7,10 +7,12 @@ import(
 	"encoding/base32"
 	"strings"
 	"errors"
+	"net"
 	"net/url"
 	"net/http"
 	"math/rand"
 	"strconv"
+	"regexp"
 	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
@@ -66,7 +68,6 @@ func commonTemplate(ctx *web.Context, contentFile string, args map[string]string
 		logger.Println("ERROR: ", err.Error())
 	}
 }
-
 
 
 /*
@@ -184,6 +185,8 @@ func error404(ctx *web.Context, urlStr string){
 */
 func internalError(ctx *web.Context, err error){
 	logger.Printf("500 Internal Server Error: %v\n", err.Error())
+	
+	sendEmailToAdmins("Redu.se Internal Error", err.Error())
 	
 	ctx.WriteHeader(500)
 	
@@ -339,33 +342,20 @@ func validateURL(urlStr string) (string, bool, error){
 		soln:	the solution the user submitted to the CAPTCHA
 	Returns:
 		bool:	true if the user entered a correct solution, false otherwise.
+		string:	A string containing the error text as to why the solution was not accepted, or nil
+		error:	Any error that was encountered
 */
-func goodCaptchaSolution(ctx *web.Context, id, soln string) bool {
+func goodCaptchaSolution(ctx *web.Context, id, soln string) (bool, string, error) {
 	//make sure we were given a non-empty ID
 	if id == "" {
-		internalError(ctx, errors.New("Attempting to verify CAPTCHA with empty ID"))
-		return false
+		return false, "INTERNAL ERROR", errors.New("Attempting to verify CAPTCHA with empty ID")
 	} else if soln == "" {		//Make sure they actually answered the CAPTCHA
-		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Incorrect CAPTCHA",
-			 							 "body_text":"You must enter a solution to the CAPTCHA to generate a short link",
-			 							 "show_try_again":"true",
-			 							 "user_url":ctx.Params["url"],
-			 							 })
-		return false
+		return false, "You must enter a solution to the CAPTCHA to generate a short link", nil
 	} else if !captcha.VerifyString(ctx.Params["captcha_id"], soln) {	//They didn't give a correct solution
-		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Incorrect CAPTCHA",
-			 							 "body_text":"The solution to the CAPTCHA that you entered was incorrect",
-			 							 "show_try_again":"true",
-			 							 "user_url":ctx.Params["url"],
-			 							 })
-		return false
+		return false, "The solution to the CAPTCHA that you entered was incorrect", nil
 	}
 	//The user gave us a correct solution to the CAPTCHA
-	return true
+	return true, "", nil
 }
 
 /*
@@ -382,9 +372,22 @@ func generate(ctx *web.Context){
 	//Verify the user's CAPTCHA solution
 	capId := ctx.Params["captcha_id"]
 	capSoln := ctx.Params["captcha_soln"]
-	if !goodCaptchaSolution(ctx, capId, capSoln) {
+	goodCapSoln, reason, err := goodCaptchaSolution(ctx, capId, capSoln)
+	if err != nil {
+		internalError(ctx, err)
+		return
+	} else if !goodCapSoln {
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Incorrect CAPTCHA",
+			 							 "body_text":reason,
+			 							 "show_try_again":"true",
+			 							 "user_url":ctx.Params["url"],
+			 							 })
 		return
 	}
+	
+	
 	
 	urlStr := ctx.Params["url"]
 	
@@ -426,7 +429,7 @@ func generate(ctx *web.Context){
 		testHash = hashStr[:i]
 		
 		//Check if this shorthash already exists in the database
-		val, exists, err := db_linkForHash(testHash)
+		val, _, exists, err := db_linkForHash(testHash)
 		if err != nil {
 			internalError(ctx, errors.New("Database Error: "+err.Error()))
 			return
@@ -488,33 +491,283 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 	upperHash := strings.ToUpper(hash)
 	
 	//Check to see if a link exists for the given hash
-	link, exists, err := db_linkForHash(upperHash)
+	link, numReports, exists, err := db_linkForHash(upperHash)
 	if err != nil {
 		//There was an error in the database
 		internalError(ctx, errors.New("Database Error: "+err.Error()))
 	} else if exists {
-		//The hash=>link exists
-		redir := link
-		
-		//If there were any path extras passed to us, append them to the redir link
-		if extras != "" {
-			redir += "/" + extras
-		}
-		
-		//If there are any GET parameters being passed to us, append them to the redir link
-		if len(ctx.Params) > 0 {
-			params := "?"
-			for k, v := range ctx.Params {
-				params += k + "=" + v + "&"
+		//Check to see if the link has been flagged for review
+		if numReports >= NUM_REPORTS_TO_FLAG {
+			
+			redir := link
+			
+			//If there were any path extras passed to us, append them to the redir link
+			if extras != "" {
+				redir += "/" + extras
 			}
-			//remove the trailing ampersand and append to the redir link
-			redir += strings.TrimSuffix(params, "&")
-		}
-		
-		//if the hash exists in the link table, issue a '302 Found' to the client with the link URL
-		ctx.Redirect(302, redir)	
+			
+			//If there are any GET parameters being passed to us, append them to the redir link
+			if len(ctx.Params) > 0 {
+				params := "?"
+				for k, v := range ctx.Params {
+					params += k + "=" + v + "&"
+				}
+				//remove the trailing ampersand and append to the redir link
+				redir += strings.TrimSuffix(params, "&")
+			}
+			
+			flaggedLink(ctx, hash, redir)
+			return
+			
+		} else {
+			//The hash=>link exists
+			redir := link
+			
+			//If there were any path extras passed to us, append them to the redir link
+			if extras != "" {
+				redir += "/" + extras
+			}
+			
+			//If there are any GET parameters being passed to us, append them to the redir link
+			if len(ctx.Params) > 0 {
+				params := "?"
+				for k, v := range ctx.Params {
+					params += k + "=" + v + "&"
+				}
+				//remove the trailing ampersand and append to the redir link
+				redir += strings.TrimSuffix(params, "&")
+			}
+			
+			//if the hash exists in the link table, issue a '302 Found' to the client with the link URL
+			ctx.Redirect(302, redir)
+		}	
 	} else {
 		//No link exists for the hash, so serve a '404 Not Found' error page
 		error404(ctx, hash)
 	}
+}
+
+
+func flaggedLink(ctx *web.Context, hash string, target string){
+	
+	upperHash := strings.ToUpper(hash)
+	
+	reports, err := db_reportsForHash(upperHash)
+	if err != nil{
+		internalError(ctx, err)
+	}
+	
+	for _, r := range reports {
+		logger.Println(r)
+	}
+	
+	
+	commonTemplate(ctx,
+						   "flaggedLink.html",
+						   map[string]string{"link_hash":hash,
+						   					 "destination_url":target,
+						 					 })
+}
+
+
+func reportLink(ctx *web.Context){
+	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE]
+	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
+	
+	
+	commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":captchaId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":ctx.Params["url"],
+									 })
+}
+
+
+func trimIPAddress(rawIP string) (string, error) {
+	
+	raw := rawIP
+	
+	//check to see if it matches the format of an IPv6 address
+	isIPv6, err := regexp.MatchString("\\[([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}\\].*", raw)
+	
+	if err != nil {
+		return "", err
+	}
+	if isIPv6 {
+		
+		//check if the IPv6 addr also has a port
+		hasPort, err := regexp.MatchString("\\[.+\\]:.+", raw)
+		if err != nil {
+			return "", err
+		}
+		if hasPort {
+			//and remove the port
+			raw = strings.TrimRight(raw, ":1234567890")
+		}
+		
+		raw = strings.TrimPrefix(raw, "[")
+		raw = strings.TrimSuffix(raw, "]")
+		
+		
+	} else {	
+		//raw = strings.TrimRight(raw, ":1234567890")
+		
+		//check for IPv4 address, with stict port range checking as well
+		isIPv4, err := regexp.MatchString("(([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5])\\.){3}([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5])(:[0-9]+)?", raw)
+		if err != nil {
+			return "", err
+		}
+		if isIPv4 {
+			//less strict IP range check, but see if there is a :PORT on the end
+			hasPort, err := regexp.MatchString("([0-9]{1,3}\\.){3}[0-9]{1,3}:[0-9]+", raw)
+			if err != nil {
+				return "", err
+			}
+			if hasPort {
+				raw = strings.TrimRight(raw, "1234567890")	//trim the port number off the right
+				raw = strings.TrimSuffix(raw, ":")			//and trim the colon (must do seperately, otherwise part of the ip addr will be trimmed too)
+			}
+		}
+	}
+	
+	
+	return raw, nil
+}
+
+func submitReport(ctx *web.Context){
+	//TODO?: add reasons as to why a link has been flagged to alert page (in serveLink) 
+	
+	capId := ctx.Params["captcha_id"]
+	capSoln := ctx.Params["captcha_soln"]
+	
+	linkId := ctx.Params["linkId"]
+	reportTypeString := ctx.Params["reportReason"]
+	comment := ctx.Params["report_comment"]
+	
+	//Make sure the user filled out the form
+	if linkId == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must provide a link to report.",
+									 })
+		return
+	} else if reportTypeString == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must select a reason that you are reporting this link.",
+									 })
+		return
+	} else if comment == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must provide a comment as to why you are reporting this link.",
+									 })
+		return
+	} else if capSoln == "" {
+		commonTemplate(ctx,
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":linkId,
+									 "error_msg":"You must provide a solution to the CAPTCHA",
+									 })
+		return
+	}
+	
+	//Verify the user's CAPTCHA solution
+	goodCapSoln, reason, err := goodCaptchaSolution(ctx, capId, capSoln)
+	if err != nil {
+		internalError(ctx, err)
+		return
+	} else if !goodCapSoln {
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Incorrect CAPTCHA",
+			 							 "body_text":reason,
+			 							 "show_try_again":"true",
+			 							 "try_again_path":"page/report/",
+			 							 "user_url":linkId,
+			 							 })
+		return
+	}
+	
+	//make the hash all uppercase
+	upperHash := strings.ToUpper(linkId)
+	
+	
+	// attempt to parse the IP address of the user that made this report
+	rawIP := string(ctx.Request.RemoteAddr)
+	//trim the IP address of any extra stuff (whitespace, portnumber, etc.)
+	trimmedIP, err := trimIPAddress(rawIP)
+	if err != nil {
+		internalError(ctx, err)
+		return
+	}
+	//attempt to parse the IP
+	ip := net.ParseIP(trimmedIP)
+	if ip == nil {
+		internalError(ctx, errors.New("Unable to parse client IP address"))
+		return
+	}
+	ipStr := ip.String()
+	
+	
+	//Generate a new report struct to add to the database
+	rep := NewReport(upperHash, ipStr, ReportTypeForString(reportTypeString), comment)
+	
+	//attempt to add the report to the database
+	numReports, exists, err := db_addReport(rep)
+	if _, isREE := err.(ReportExistsError); isREE {
+		//A report for this link already exists from the user's IP address
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Report Exists",
+			 							 "body_text":"A report for that link already exists from your IP address.",
+			 							 })
+	} else if err != nil {
+		//any other errors
+		internalError(ctx, err)
+	} else if !exists {
+		//The link doens't exist
+		bStr := "The link redu.se/" + linkId + " does not exist." 
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Link Does Not Exist",
+			 							 "body_text":bStr,
+			 							 })
+		return
+	}	
+	
+	
+	//If the number of reports has increased over the flag point, send an email to the admins
+	if numReports >= NUM_REPORTS_TO_FLAG {
+		err = sendEmailToAdmins("Link Reported", "The link " + linkId + " was reported.")
+		if err != nil{
+			internalError(ctx, err)
+			return
+		}
+	}
+	
+	//Tell the user that their report has been recieved
+	commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Thank You", "body_text":"Your report was submitted"})
 }

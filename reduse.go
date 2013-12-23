@@ -13,6 +13,7 @@ const(
 	LINK_START_LENGTH = 5
 	CAPTCHA_MIN_LENGTH = 6
 	CAPTCHA_VARIANCE = 2	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGNTH + CAPTCHA_VARIANCE]
+	NUM_REPORTS_TO_FLAG	= 1	// The number of reports required before a link becomes flagged for review
 )
 
 var DEFAULTS = map[string]string {
@@ -44,8 +45,10 @@ func main() {
 	dbUsername := os.Getenv("REDUSE_DB_USERNAME")
 	dbPassword := os.Getenv("REDUSE_DB_PASSWORD")
 	
-	
-	
+	//get the pertinent email information
+	emailUsername := os.Getenv("REDUSE_EMAIL_USERNAME")
+	emailPassword := os.Getenv("REDUSE_EMAIL_PASSWORD")
+	adminEmails := os.Getenv("REDUSE_EMAIL_ADMIN_ADDRESSES")
 	
 	//Set up logging to stdout
 	logger = log.New(os.Stdout, "", log.Lshortfile)
@@ -71,6 +74,14 @@ func main() {
 		return
 	}
 	
+	//Initialize the email sending functionality
+	err = initEmail(adminEmails, emailUsername, emailPassword)
+	if err != nil{
+		logger.Println("Could not initialize email")
+		logger.Panic(err.Error())
+		return
+	}
+	
 	//Past this point, we should not have any panic()'s, rather any and all errors should be handled gracefully
 	
 	//don't do any of this stuff if we are in development mode (ie. production-only initialization goes here)
@@ -83,16 +94,20 @@ func main() {
 	}
 	
 	
+	
 	web.Get("/", home)
 	web.Get("/page/terms/?", showTerms)
-	web.Post("/page/generate/", generate)
+	web.Post("/page/generate/?", generate)
+	web.Get("/page/report/?", reportLink)
+	web.Post("/page/report/submit/?", submitReport)
 	web.Get("/rsrc/captcha/img/reload/(.+)\\.png", reloadCaptchaImage)
 	web.Get("/rsrc/captcha/img/(.+)\\.png", serveCaptchaImage)
-	web.Get("/rsrc/captcha/audio/(.+)\\.wav", serveCaptchaAudio)
+	//web.Get("/rsrc/captcha/audio/(.+)\\.wav", serveCaptchaAudio)
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	web.Run(":" + port)
 }
+
 
 
 

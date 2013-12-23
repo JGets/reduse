@@ -1,0 +1,9 @@
+{{define "common_content"}}
+	<div class="content">
+		<h2>Link Flagged For Review</h2>
+		The link <strong>{{.app_name}}/{{.link_hash}}</strong> has been flagged for review by other users for potentially violating the <a href="{{.base_url}}page/terms">terms of service</a>.<br/>
+		If you wish to continue, you can click on the link below:<br/>
+		<br/>
+		<a href="{{.destination_url}}">{{.destination_url}}</a>
+	</div>
+{{end}}

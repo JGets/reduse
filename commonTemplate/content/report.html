@@ -1,0 +1,207 @@
+{{define "common_content"}}
+	<script type="text/javascript">
+		
+		function validateReportForm(){
+			var linkId = $("#linkId").val();
+			
+			if(linkId == ""){
+				customAlert("Error", "You must enter a link to report");
+				return false;
+			}
+			
+			var reason = $("#reportReason").val()
+			if(reason == null || reason == ""){
+				customAlert("Error", "You must select a reason as to why you are reporting this link");
+				return false;
+			}
+			
+			
+			var comm = $("#report_comment").val()
+			if(comm == null || comm == "" || comm.replace(/( |\t|\n)/g, "").length == 0){
+				//The comment field was empty
+				customAlert("Error", "You must provide a reason in the comment section as to why you are reporting this link.");
+				return false;
+			} else if (comm.replace(/(^((qwerty)+|(foo|bar)+|[0-9asdfjkl; ]+)$|lorem( ipsum)?)/gi, "").length == 0){
+				//The comment field is just full of random text
+				
+				if(comm.search(/lorem( ipsum)?/gi) >= 0){
+					customAlert("Error", "It looks like you have entered random text into the<br/>comment field.<br/><br/>Please provide a reason as to why you are reporting this link.<br/><br/>Tip: Don't put <em>Lorem ipsum ...</em> in your comment.");
+				}
+				else{
+					customAlert("Error", "It looks like you have entered random text into the<br/>comment field.<br/><br/>Please provide a reason as to why you are reporting this link.");
+				}
+				return false;
+			}/* else if (comm.replace(/( |\t|\n)/g, "").length < 10){
+				//The comment field has less than 10 non-whitespace characters (ie. they haven't said enough)
+				customAlert("Error", "Please be more descriptive as to why you are reporting this link");
+				return false;
+			}*/
+			
+			if(!validateCaptcha()){
+				return false;
+			}
+			
+			
+			return true;
+		}
+		
+		function validateCaptcha() {
+			var capSoln = document.getElementById("captcha_soln").value;
+			var c_minLength = parseInt({{.captcha_soln_min_length}});
+			var c_maxLength = parseInt({{.captcha_soln_max_length}});
+			
+			if(capSoln == ""){
+				customAlert("Error", "You must enter a solution to the CAPTCHA");
+				return false;
+			} else if(capSoln.length < c_minLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too short");
+				return false;
+			} else if(capSoln.length > c_maxLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too long");
+				return false;
+			}
+			
+			if(capSoln.search("[^0-9]") != -1){
+				customAlert("Error", "A CAPTCHA solution contains only numbers (0-9)");
+				return false;
+			}
+			
+			return true
+		}
+		
+		function reloadCaptcha(){
+			document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
+			document.getElementById("captcha_soln").value = "";
+		}
+		
+		function removePrefix(){
+			val = document.getElementById("linkId").value;
+			
+			document.getElementById("linkId").value = val.replace(/(http:\/\/)?redu\.se\//i, "");
+			
+			// var regex = new RegExp("(http://)?redu\\.se/.*", "gi");
+			// if(regex.test(val)){
+			// 	document.getElementById("linkId").value = val.toLowerCase().replace(/(http:\/\/)?redu\\.se/gi, "");
+			// }
+		}
+		
+		$(document).ready(function(){
+			//If the user clicks on the part of the link input field that is actually a div, put focus on the input element
+			$("#link_psuedo_input").click(function(){
+				$("#linkId").focus();
+			});
+			
+			//Change the colour of the placeholder text on the link field depending on it's value
+			$("#linkId").focus(function(){
+				if($(this).val() == ""){
+					$("#link_psuedo_input").css("color", "#0E8A8A");
+				}
+				
+			});
+			$("#linkId").blur(function(){
+				if($(this).val() == ""){
+					$("#link_psuedo_input").css("color", "#A9A9A9");
+				}
+			});
+			
+			
+			//validate the form when the user hits the submit button
+			$("#report_link_form").submit(function(event){
+				if(!validateReportForm()){
+					event.preventDefault();
+				}
+			});
+			
+			
+			{{if .user_url}} {{/* If we were given a url parameter, change the colour in the link input field */}}
+				$("#link_psuedo_input").css("color", "#0E8A8A");
+			{{end}}
+			
+			{{if .error_msg}}
+				customAlert("Error", {{.error_msg}});
+			{{end}}
+			
+		});
+	</script>
+	<style>
+		#link_psuedo_input{
+			width:392px;
+			margin:auto;
+			padding:3px;
+			background:transparent;
+			-moz-border-radius: 3px;
+			-webkit-border-radius: 3px;
+			-o-border-radius: 3px;
+			-e-border-radius: 3px;
+			border-radius: 3px;
+			border:1px #0E8A8A solid;
+			text-align:left; 
+			/*color:#0E8A8A;*/
+			color:#A9A9A9;
+			cursor:text;
+			margin-bottom:15px;
+		}
+		
+		#linkId{
+			border:none;
+			margin:0px;
+			width:317px;
+			padding-left:0px;
+		}
+		
+		#report_link_form{
+			width:400px;
+			margin:auto;
+		}
+		
+		#report_comment{
+			width:392px;
+			height:40pt;
+			resize:none;
+		}
+	</style>
+	<div class="content">
+		<h2>{{.title_text}}</h2>
+		Use this form to report a link that redirects to a page that you feel is inapropriate or violates the <a href="{{.base_url}}page/terms">terms of service</a>.<br/>
+		Reported links will be reviewed and removed at the discretion of {{.app_name}}'s administrators.<br/>
+		<br/>
+		<div class="form_wrapper">
+			<form id="report_link_form" action="page/report/submit/" method="POST">
+				Link to report:
+				<div id="link_psuedo_input">
+					redu.se/<input id="linkId" name="linkId" type="text" placeholder="abc" value="{{.user_url}}" oninput="removePrefix();" autocomplete="off" autocapitalize="off" />
+				</div>
+				<div class="select_wrapper">
+					<div class="select_arrow">
+						<i class="fa fa-angle-double-down"></i>
+					</div>
+					<select id="reportReason" name="reportReason">
+						<option value="" selected="selected" disabled="disabled">Select A Reason ...</option>
+						<option value="SPAM">Spam</option>
+						<option value="ILLEGAL">Illegal Content</option>
+						<option value="MORALLY_OBJECTIONABLE">Morally Objectionable Content</option>
+						<option value="TAKEDOWN_REQUEST">Takedown Request (Elaborate Below)</option>
+					</select>
+				</div>
+				<textarea id="report_comment" name="report_comment" placeholder="Enter any comments here (max. 500 characters)" maxlength="500" autocomplete="off" autocapitalize="off"></textarea>
+				<div class="captcha_form">
+					<div id="captcha_image_wrapper">
+						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
+						<div id="captcha_options_wrapper">
+							<div id="captcha_reload_wrapper">
+								<a class="captcha_option_button" onclick="reloadCaptcha();"><i class="fa fa-repeat captcha_option_icon"></i></a>
+							</div>
+						</div>
+					</div>
+					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" autocapitalize="off" />
+					<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
+				</div>
+				<input type="submit" value="Submit" />
+			</form>
+			<br/>
+			<br/>
+			<br/>
+			Note: Your IP address will be recorded upon submission.
+		</div>
+	</div>
+{{end}}
