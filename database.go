@@ -330,7 +330,15 @@ func db_addReport(report *Report) (int, bool, error){
 	return db_addReportHelper(db, report)
 }
 
-func db_addReportHelper(db *sql.DB, report *Report) (int, bool, error){
+type ReportExistsError struct{
+	Hash string
+	IPAddr string
+}
+func (e ReportExistsError) Error() string{
+	return "A report for link of hash '" + e.Hash + "' already exists from user IP address '" + e.IPAddr + "'"
+}
+
+func db_addReportHelper(db *sql.DB, report *Report) (numReports int, linkExists bool, err error){
 	//Check to make sure the link actually exists
 	_, numReports, exists, err := db_linkForHashHelper(db, report.Hash)
 	if err != nil{
@@ -340,11 +348,22 @@ func db_addReportHelper(db *sql.DB, report *Report) (int, bool, error){
 	}
 	
 	
+	//check to make sure that a report for this link from the given IP address doesn't already exist
+	reports, err := db_reportsForHashHelper(db, report.Hash)
+	if err != nil {
+		return -1, true, err
+	}
+	for _, v := range reports {
+		if v.OriginIP == report.OriginIP {
+			return -1, true, ReportExistsError{report.Hash, report.OriginIP}
+		}
+	}
+	
+	
 	//make sure not to overflow the numReports value in the DB (ie. don't increment it if it's already at the max)
 	if numReports < TINYINT_MAX-1 {
 		numReports += 1
 	}
-	
 	
 	
 	/*

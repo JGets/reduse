@@ -98,10 +98,6 @@ func main() {
 	
 	serverAddressWithPort := /*serverAddress +*/ ":" + port
 	
-	if devMode {
-		web.Get("/test/?", testPage)
-		web.Get("/ip/(.+)", testIP)
-	}
 	
 	web.Get("/", home)
 	web.Get("/page/terms/?", showTerms)

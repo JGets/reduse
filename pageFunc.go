@@ -70,44 +70,6 @@ func commonTemplate(ctx *web.Context, contentFile string, args map[string]string
 }
 
 
-func testPage(ctx *web.Context) {
-	rawIP := string(ctx.Request.RemoteAddr)
-	
-	ctx.WriteString("raw: " + rawIP + "<br/>")
-	
-	ip := net.ParseIP(rawIP)
-	
-	ipStr := ip.String()
-	
-	ctx.WriteString("string: " + ipStr + "<br/>")
-	
-}
-
-func testIP(ctx *web.Context, input string) {
-	
-	trimmed, err :=  trimIPAddress(input)
-	
-	if err != nil {
-		ctx.WriteString(err.Error())
-		return
-	}
-	
-	ip := net.ParseIP(trimmed)
-	
-	if ip == nil {
-		ctx.WriteString("Could not parse IP<br/>")
-		ctx.WriteString("Input: " + trimmed)
-		return
-	}
-	
-	ctx.WriteString(ip.String())
-	return
-	
-	
-}
-
-
-
 /*
 	Serve the homepage
 	Parameters:
@@ -384,32 +346,6 @@ func validateURL(urlStr string) (string, bool, error){
 		error:	Any error that was encountered
 */
 func goodCaptchaSolution(ctx *web.Context, id, soln string) (bool, string, error) {
-	// //make sure we were given a non-empty ID
-	// if id == "" {
-	// 	internalError(ctx, errors.New("Attempting to verify CAPTCHA with empty ID"))
-	// 	return false
-	// } else if soln == "" {		//Make sure they actually answered the CAPTCHA
-	// 	commonTemplate(ctx,
-	// 				   "generic.html",
-	// 				   map[string]string{"title_text":"Incorrect CAPTCHA",
-	// 		 							 "body_text":"You must enter a solution to the CAPTCHA to generate a short link",
-	// 		 							 "show_try_again":"true",
-	// 		 							 "user_url":ctx.Params["url"],
-	// 		 							 })
-	// 	return false
-	// } else if !captcha.VerifyString(ctx.Params["captcha_id"], soln) {	//They didn't give a correct solution
-	// 	commonTemplate(ctx,
-	// 				   "generic.html",
-	// 				   map[string]string{"title_text":"Incorrect CAPTCHA",
-	// 		 							 "body_text":"The solution to the CAPTCHA that you entered was incorrect",
-	// 		 							 "show_try_again":"true",
-	// 		 							 "user_url":ctx.Params["url"],
-	// 		 							 })
-	// 	return false
-	// }
-	// //The user gave us a correct solution to the CAPTCHA
-	// return true
-	
 	//make sure we were given a non-empty ID
 	if id == "" {
 		return false, "INTERNAL ERROR", errors.New("Attempting to verify CAPTCHA with empty ID")
@@ -758,8 +694,6 @@ func submitReport(ctx *web.Context){
 		return
 	}
 	
-	
-	
 	//Verify the user's CAPTCHA solution
 	goodCapSoln, reason, err := goodCaptchaSolution(ctx, capId, capSoln)
 	if err != nil {
@@ -781,31 +715,40 @@ func submitReport(ctx *web.Context){
 	upperHash := strings.ToUpper(linkId)
 	
 	
+	// attempt to parse the IP address of the user that made this report
 	rawIP := string(ctx.Request.RemoteAddr)
-	
+	//trim the IP address of any extra stuff (whitespace, portnumber, etc.)
 	trimmedIP, err := trimIPAddress(rawIP)
 	if err != nil {
 		internalError(ctx, err)
 		return
 	}
-	
-	
+	//attempt to parse the IP
 	ip := net.ParseIP(trimmedIP)
 	if ip == nil {
 		internalError(ctx, errors.New("Unable to parse client IP address"))
 		return
 	}
-	
-	
 	ipStr := ip.String()
 	
 	
+	//Generate a new report struct to add to the database
 	rep := NewReport(upperHash, ipStr, ReportTypeForString(reportTypeString), comment)
 	
+	//attempt to add the report to the database
 	numReports, exists, err := db_addReport(rep)
-	if err != nil {
+	if _, isREE := err.(ReportExistsError); isREE {
+		//A report for this link already exists from the user's IP address
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Report Exists",
+			 							 "body_text":"A report for that link already exists from your IP address.",
+			 							 })
+	} else if err != nil {
+		//any other errors
 		internalError(ctx, err)
 	} else if !exists {
+		//The link doens't exist
 		bStr := "The link redu.se/" + linkId + " does not exist." 
 		commonTemplate(ctx,
 					   "generic.html",
@@ -813,9 +756,7 @@ func submitReport(ctx *web.Context){
 			 							 "body_text":bStr,
 			 							 })
 		return
-	}
-	
-	
+	}	
 	
 	
 	//If the number of reports has increased over the flag point, send an email to the admins
