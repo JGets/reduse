@@ -93,6 +93,7 @@ func main() {
 		agent.Run()
 	}
 	
+	web.Get("/test", testPage)
 	
 	web.Get("/", home)
 	web.Get("/page/terms/?", showTerms)
@@ -105,6 +106,17 @@ func main() {
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	web.Run(":" + port)
+}
+
+func testPage(ctx *web.Context) string {
+	
+	ret := ""
+	
+	for _, v := range ctx.Request.Header["X-Forwareded-For"] {
+		ret += v + "\n"
+	}
+	
+	return ret
 }
 
 
