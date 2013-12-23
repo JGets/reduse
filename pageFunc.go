@@ -224,6 +224,8 @@ func error404(ctx *web.Context, urlStr string){
 func internalError(ctx *web.Context, err error){
 	logger.Printf("500 Internal Server Error: %v\n", err.Error())
 	
+	sendEmailToAdmins("Redu.se Internal Error", err.Error())
+	
 	ctx.WriteHeader(500)
 	
 	commonTemplate(ctx,
@@ -697,15 +699,6 @@ func trimIPAddress(rawIP string) (string, error) {
 	
 	
 	return raw, nil
-	
-	// ip := net.ParseIP(raw)
-	
-	// if ip == nil {
-	// 	return "", errors.New("Could not parse IP address")
-	// }
-	
-	
-	// return ip.String(), nil
 }
 
 func submitReport(ctx *web.Context){
