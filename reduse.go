@@ -112,7 +112,7 @@ func testPage(ctx *web.Context) string {
 	
 	ret := ""
 	
-	for _, v := range ctx.Request.Header["X-Forwareded-For"] {
+	for _, v := range ctx.Request.Header["X-Forwarded-For"] {
 		ret += v + "\n"
 	}
 	
