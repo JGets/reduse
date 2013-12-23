@@ -93,6 +93,10 @@ func showTerms(ctx *web.Context){
 	commonTemplate(ctx, "terms.html", map[string]string{})
 }
 
+func testIP(ctx *web.Context) string {
+	return string(ctx.Request.RemoteAddr)
+}
+
 
 /*
 	Serves a CAPTCHA image

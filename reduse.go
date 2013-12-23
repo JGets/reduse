@@ -93,7 +93,7 @@ func main() {
 		agent.Run()
 	}
 	
-	
+	web.Get("/ip/" testIP)
 	
 	web.Get("/", home)
 	web.Get("/page/terms/?", showTerms)
