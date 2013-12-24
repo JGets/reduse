@@ -37,6 +37,9 @@ func main() {
 	devStr := os.Getenv("REDUSEDEVELOPMODE")
 	devMode = (devStr == "true")
 	
+	herokuProdStr := os.Getenv("REDUSE_HEROKU_PRODUCTION")
+	herokuProduction = (herokuProdStr == "true")
+	
 	port := os.Getenv("PORT")	//get the port that we are to run off of
 	
 	//get the database information from the environment
@@ -93,8 +96,6 @@ func main() {
 		agent.Run()
 	}
 	
-	web.Get("/test", testPage)
-	
 	web.Get("/", home)
 	web.Get("/page/terms/?", showTerms)
 	web.Post("/page/generate/?", generate)
@@ -106,17 +107,6 @@ func main() {
 	web.Get("/(.+)/(.*)", serveLinkWithExtras)
 	web.Get("/(.+)", serveLink)
 	web.Run(":" + port)
-}
-
-func testPage(ctx *web.Context) string {
-	
-	ret := ""
-	
-	for _, v := range ctx.Request.Header["X-Forwarded-For"] {
-		ret += v + "\n"
-	}
-	
-	return ret
 }
 
 

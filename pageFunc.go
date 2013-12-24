@@ -716,7 +716,15 @@ func submitReport(ctx *web.Context){
 	
 	
 	// attempt to parse the IP address of the user that made this report
-	rawIP := string(ctx.Request.RemoteAddr)
+	var rawIP string
+	
+	if herokuProduction {	// because of Heroku's reverse router system, we need to grab the user's IP from the X-Forwarded-For header
+		forwardSlice := ctx.Request.Header["X-Forwarded-For"]	//The client's IP is guaranteed to be the last element
+		rawIP = forwardSlice[len(forwardSlice)-1]
+	} else {	//otherwise we can just grab the IP from the request
+		rawIP = string(ctx.Request.RemoteAddr)
+	}
+	
 	//trim the IP address of any extra stuff (whitespace, portnumber, etc.)
 	trimmedIP, err := trimIPAddress(rawIP)
 	if err != nil {
