@@ -16,7 +16,6 @@ const(
 )
 
 func ReportTypeForString(str string) ReportType{
-	logger.Printf("ReportTypeForString: '%v'", str)
 	switch strings.ToUpper(str) {
 		case "SPAM":
 			return SPAM
