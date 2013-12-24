@@ -61,6 +61,10 @@ func main() {
 		logger.Println("Running in Develop mode")
 	}
 	
+	if herokuProduction {
+		logger.Println("Heroku Production flag set")
+	}
+	
 	//Run startup code
 	started, err := startup()
 	if !started {
