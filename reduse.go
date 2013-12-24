@@ -27,7 +27,7 @@ var DEFAULTS = map[string]string {
 								  }
 
 //Global app variables
-var devMode bool
+var devMode, herokuProduction bool
 var appName, serverAddress, siteBaseURL, siteShortAddr string
 var logger *log.Logger
 
