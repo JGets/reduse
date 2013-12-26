@@ -638,7 +638,6 @@ func trimIPAddress(rawIP string) (string, error) {
 }
 
 func submitReport(ctx *web.Context){
-	//TODO?: add reasons as to why a link has been flagged to alert page (in serveLink) 
 	
 	capId := ctx.Params["captcha_id"]
 	capSoln := ctx.Params["captcha_soln"]
