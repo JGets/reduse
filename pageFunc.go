@@ -547,19 +547,26 @@ func serveLinkWithExtras(ctx *web.Context, hash string, extras string){
 	}
 }
 
-
+/*
+	handles when a user attempts to visit a link that has been reported enough times by other users to
+	be flagged - ie. serves a page telling the user that the link has been flagged
+	Parameters:
+		ctx:	The context of the request
+		hash:	The hash of the link that the user was trying to access
+		target:	The target URL of the link
+*/
 func flaggedLink(ctx *web.Context, hash string, target string){
 	
-	upperHash := strings.ToUpper(hash)
+	// upperHash := strings.ToUpper(hash)
 	
-	reports, err := db_reportsForHash(upperHash)
-	if err != nil{
-		internalError(ctx, err)
-	}
+	// reports, err := db_reportsForHash(upperHash)
+	// if err != nil{
+	// 	internalError(ctx, err)
+	// }
 	
-	for _, r := range reports {
-		logger.Println(r)
-	}
+	// for _, r := range reports {
+	// 	logger.Println(r)
+	// }
 	
 	
 	commonTemplate(ctx,
@@ -569,7 +576,9 @@ func flaggedLink(ctx *web.Context, hash string, target string){
 						 					 })
 }
 
-
+/*
+	Serves a page with the form for users to report a link
+*/
 func reportLink(ctx *web.Context){
 	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE]
 	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
@@ -585,14 +594,15 @@ func reportLink(ctx *web.Context){
 									 })
 }
 
-
+/*
+	trims an IP address of any extras (ie. port, square brackets on an IPv6)
+*/
 func trimIPAddress(rawIP string) (string, error) {
 	
 	raw := rawIP
 	
 	//check to see if it matches the format of an IPv6 address
 	isIPv6, err := regexp.MatchString("\\[([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}\\].*", raw)
-	
 	if err != nil {
 		return "", err
 	}
@@ -608,20 +618,19 @@ func trimIPAddress(rawIP string) (string, error) {
 			raw = strings.TrimRight(raw, ":1234567890")
 		}
 		
+		//remove the brackets surrounding the actual IP address
 		raw = strings.TrimPrefix(raw, "[")
 		raw = strings.TrimSuffix(raw, "]")
 		
 		
 	} else {	
-		//raw = strings.TrimRight(raw, ":1234567890")
-		
-		//check for IPv4 address, with stict port range checking as well
+		//check for IPv4 address, with stict range checking as well
 		isIPv4, err := regexp.MatchString("(([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5])\\.){3}([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5])(:[0-9]+)?", raw)
 		if err != nil {
 			return "", err
 		}
 		if isIPv4 {
-			//less strict IP range check, but see if there is a :PORT on the end
+			//less strict IP range check, but see if there is a :PORT on the end as well
 			hasPort, err := regexp.MatchString("([0-9]{1,3}\\.){3}[0-9]{1,3}:[0-9]+", raw)
 			if err != nil {
 				return "", err
@@ -637,6 +646,9 @@ func trimIPAddress(rawIP string) (string, error) {
 	return raw, nil
 }
 
+/*
+	recieves a link report submission, verifies the CAPTCHA, makes a report struct, and attempts to add it to the database
+*/
 func submitReport(ctx *web.Context){
 	
 	capId := ctx.Params["captcha_id"]
