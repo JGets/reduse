@@ -1,6 +1,7 @@
 Redu.se TODOs:
 
 - add contact page
+- refactor database functions to return a new error type for links that do not exist, rather than having a seperate boolean return value
 - add URL blacklist checking
 	- by domain, subdomain???
 - add CAPTCHA audio support to frontend
