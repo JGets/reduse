@@ -293,7 +293,7 @@ func validateURL(urlStr string) (string, bool, error){
 	}
 	
 	//Make sure we wer given an accepted scheme
-	if u.Scheme == "http" || u.Scheme == "https"{	//Accepted URL schemes that end with "://"
+	if strings.ToLower(u.Scheme) == "http" || strings.ToLower(u.Scheme) == "https"{	//Accepted URL schemes that end with "://"
 		//check to make sure the URL contains a host
 		if u.Host == ""{
 			return URL_EMPTY_HOST, false, nil
@@ -322,14 +322,17 @@ func validateURL(urlStr string) (string, bool, error){
 		return URL_INVALID_SCHEME, false, nil
 	}
 	
-	
 	//Check to make sure the validated URL is equivalent to the given one
 	validStr := u.String()
 	if validStr != urlStr {
 		return URL_VALIDATED_INEQUIVALENT, false, nil
 	}
+
+	//make the domian & scheme all lowercase (consolidate equivalent URLs to the same hash)
+	u.Scheme = strings.ToLower(u.Scheme)
+	u.Host = strings.ToLower(u.Host)
 	
-	return validStr, true, nil
+	return u.String(), true, nil
 }
 
 

@@ -57,22 +57,35 @@
 					//There was no scheme			
 					if(scheme == ""){
 						customAlert("Error", "The URL you enetered appears to have an empty <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a>.<br/><br/>" + validSchemesText);
-						bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
+						bindAnchorHover();	//re-bind the hover event for all anchors (make it apply to the new link we just put up in the popup)
 						return false;
 					}
 					
 					//It is not an accepted schem
-					if(!(scheme == "http" || scheme == "https" || scheme == "mailto")){
-						customAlert("Error", "The scheme \"" + scheme + "\" is not an accepted <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a> for {{.app_name}}.<br/><br/>" + validSchemesText);
-						bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
-						return false;
+					if(!(scheme == "http" || scheme == "https" /*|| scheme == "mailto"*/)){
+						if(scheme.toLowerCase() == "http" || scheme.toLowerCase() == "https"){
+							//the user used some upper-case letters in the scheme (will cause a parse error on server side checks, so need to fix here)
+
+							newURL = scheme.toLowerCase() + url.substring(firstCol, url.length+1);	//use the all lower-case scheme
+
+							urlField.value = newURL;	//load the url with the lower-case scheme into the form field
+
+							return validateForm(); //re-validate the form
+
+						}
+						else {
+							customAlert("Error", "The scheme \"" + scheme + "\" is not an accepted <a href=\"http://en.wikipedia.org/wiki/URI_scheme\" target=\"_blank\">scheme</a> for {{.app_name}}.<br/><br/>" + validSchemesText);
+							bindAnchorHover();	//re-bind the hover event for all anchors (make it apply to the new link we just put up in the popup)
+							return false;
+						}
+						
 					}
 					
 					//Scheme specific validation here:
 					if(scheme == "http" || scheme == "https"){
 						if(firstDot === -1){	//check for a domain (ie .com, .org, etc.)
 							customAlert("Error", "The URL you entered does not seem to have a proper <a href=\"http://en.wikipedia.org/wiki/Domain_name#Domain_name_space\" target=\"_blank\">domain</a>.<br/><br/>A domain is something like <strong>.com</strong>, <strong>.org</strong>, or <strong>.co.uk</strong>");
-							bindAnchorHover();	//re-bind the hover even for all anchors (make it apply to the new link we just put up in the popup)
+							bindAnchorHover();	//re-bind the hover event for all anchors (make it apply to the new link we just put up in the popup)
 							return false;
 						}
 						
