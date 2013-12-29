@@ -833,14 +833,26 @@ func submitReport(ctx *web.Context){
 		internalError(ctx, err)
 		return
 	} else if !goodCapSoln {
+		// commonTemplate(ctx,
+		// 			   "generic.html",
+		// 			   map[string]string{"title_text":"Incorrect CAPTCHA",
+		// 	 							 "body_text":reason,
+		// 	 							 "show_try_again":"true",
+		// 	 							 "try_again_path":"page/report/",
+		// 	 							 "user_url":linkId,
+		// 	 							 })
+
+		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Incorrect CAPTCHA",
-			 							 "body_text":reason,
-			 							 "show_try_again":"true",
-			 							 "try_again_path":"page/report/",
-			 							 "user_url":linkId,
-			 							 })
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":captchaId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "error_msg":reason,
+									 "user_url":linkId,
+									 "user_comment":comment,
+									 })
 		return
 	}
 	
@@ -891,11 +903,23 @@ func submitReport(ctx *web.Context){
 	} else if !exists {
 		//The link doens't exist
 		bStr := "The link redu.se/" + linkId + " does not exist." 
+		// commonTemplate(ctx,
+		// 			   "generic.html",
+		// 			   map[string]string{"title_text":"Link Does Not Exist",
+		// 	 							 "body_text":bStr,
+		// 	 							 })
+
+		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Link Does Not Exist",
-			 							 "body_text":bStr,
-			 							 })
+				   "report.html",
+				   map[string]string{"title_text":"Report A Link",
+									 "captcha_id":captchaId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "error_msg":bStr,
+									 "user_url":linkId,
+									 "user_comment":comment,
+									 })
 		return
 	}	
 	

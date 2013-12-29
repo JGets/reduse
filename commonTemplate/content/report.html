@@ -183,7 +183,7 @@
 						<option value="TAKEDOWN_REQUEST">Takedown Request (Elaborate Below)</option>
 					</select>
 				</div>
-				<textarea id="report_comment" name="report_comment" placeholder="Enter any comments here (max. 500 characters)" maxlength="500" autocomplete="off" autocapitalize="off"></textarea>
+				<textarea id="report_comment" name="report_comment" placeholder="Enter any comments here (max. 500 characters)" maxlength="500" autocomplete="off" autocapitalize="off">{{.user_comment}}</textarea>
 				<div class="captcha_form">
 					<div id="captcha_image_wrapper">
 						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
