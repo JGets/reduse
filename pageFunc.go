@@ -219,7 +219,7 @@ func contactPage(ctx *web.Context) {
 									 })
 }
 
-func contactPageError(ctx *web.Context, errorMsg string){
+func contactPageError(ctx *web.Context, capId string, errorMsg string, comment string, usrEmail string){
 	commonTemplate(ctx,
 					   "contact.html",
 					   map[string]string{"title_text":"Contact Us",
@@ -227,6 +227,8 @@ func contactPageError(ctx *web.Context, errorMsg string){
 										 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
 										 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
 										 "error_msg":errorMsg,
+										 "user_comment":comment,
+									 	 "user_email":usrEmail,
 										 })
 }
 
@@ -239,13 +241,13 @@ func submitContact(ctx *web.Context) {
 	
 	//Make sure the user filled out the form
 	if usrEmailStr == "" {
-		contactPageError("You must provide your email address")
+		contactPageError(ctx, capId, "You must provide your email address", comment, usrEmailStr)
 		return
 	} else if comment == "" {
-		contactPageError("You must provide a comment as to why you are contacting us")
+		contactPageError(ctx, capId, "You must provide a comment as to why you are contacting us", comment, usrEmailStr)
 		return
 	} else if capSoln == "" {
-		contactPageError("You must provide a solution to the CAPTCHA")
+		contactPageError(ctx, capId, "You must provide a solution to the CAPTCHA", comment, usrEmailStr)
 		return
 	}
 	
@@ -256,16 +258,7 @@ func submitContact(ctx *web.Context) {
 		return
 	} else if !goodCapSoln {
 		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
-		commonTemplate(ctx,
-				   "contact.html",
-				   map[string]string{"title_text":"Contact Us",
-									 "captcha_id":captchaId, 
-									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
-									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
-									 "error_msg":reason,
-									 "user_comment":comment,
-									 "user_email":usrEmailStr,
-									 })
+		contactPageError(ctx, captchaId, reason, comment, usrEmailStr)
 		return
 	}
 
@@ -277,14 +270,8 @@ func submitContact(ctx *web.Context) {
 		internalError(ctx, err)
 		return
 	} else if emailAddr == nil || emailAddr.Address != usrEmailStr {
-		commonTemplate(ctx,
-				   "contact.html",
-				   map[string]string{"title_text":"Contact Us",
-									 "captcha_id":capId, 
-									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
-									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
-									 "error_msg":"The email address you provided appears to be invalid.",
-									 })
+		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
+		contactPageError(ctx, captchaId, "The email address you provided appears to be invalid.", comment, usrEmailStr)
 		return
 	}
 
