@@ -265,13 +265,17 @@ func submitContact(ctx *web.Context) {
 		internalError(ctx, err)
 		return
 	} else if !goodCapSoln {
+		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Incorrect CAPTCHA",
-			 							 "body_text":reason,
-			 							 "show_try_again":"true",
-			 							 "try_again_path":"page/contact/",
-			 							 })
+				   "contact.html",
+				   map[string]string{"title_text":"Contact Us",
+									 "captcha_id":captchaId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "error_msg":reason,
+									 "user_comment":comment,
+									 "user_email":usrEmailStr,
+									 })
 		return
 	}
 

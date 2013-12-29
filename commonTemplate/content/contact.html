@@ -104,8 +104,8 @@
 		<br/>
 		<div class="form_wrapper">
 			<form id="contact_form" class="main_form" action="page/contact/submit/" method="POST">
-				<input type="email" id="contact_user_email" name="contact_user_email" autocomplete="off" autocapitalize="off" placeholder="Enter Your Email Address Here" />
-				<textarea id="contact_comment" name="contact_comment" placeholder="Why are you contacting us? (max. 1000 characters)" maxlength="1000" autocomplete="off" autocapitalize="off"></textarea>
+				<input type="email" id="contact_user_email" name="contact_user_email" autocomplete="off" autocapitalize="off" placeholder="Enter Your Email Address Here" value="{{.user_email}}" />
+				<textarea id="contact_comment" name="contact_comment" placeholder="Why are you contacting us? (max. 1000 characters)" maxlength="1000" autocomplete="off" autocapitalize="off">{{.user_comment}}</textarea>
 				<div class="captcha_form">
 					<div id="captcha_image_wrapper">
 						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
