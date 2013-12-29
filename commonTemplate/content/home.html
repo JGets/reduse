@@ -215,6 +215,10 @@
 					$(".captcha_form").slideDown(500);
 				});
 			{{end}}
+
+			{{if .error_msg}}
+				customAlert("Error", {{.error_msg}});
+			{{end}}
 			
 			$("#shorten_form").submit(function(event){
 				if(!validateForm()){

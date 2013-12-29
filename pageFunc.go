@@ -491,6 +491,8 @@ func goodCaptchaSolution(ctx *web.Context, id, soln string) (bool, string, error
 */
 func generate(ctx *web.Context){
 	
+	urlStr := ctx.Params["url"]
+
 	//Verify the user's CAPTCHA solution
 	capId := ctx.Params["captcha_id"]
 	capSoln := ctx.Params["captcha_soln"]
@@ -499,19 +501,31 @@ func generate(ctx *web.Context){
 		internalError(ctx, err)
 		return
 	} else if !goodCapSoln {
+		// commonTemplate(ctx,
+		// 			   "generic.html",
+		// 			   map[string]string{"title_text":"Incorrect CAPTCHA",
+		// 	 							 "body_text":reason,
+		// 	 							 "show_try_again":"true",
+		// 	 							 "user_url":ctx.Params["url"],
+		// 	 							 })
+
+		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 		commonTemplate(ctx,
-					   "generic.html",
-					   map[string]string{"title_text":"Incorrect CAPTCHA",
-			 							 "body_text":reason,
-			 							 "show_try_again":"true",
-			 							 "user_url":ctx.Params["url"],
-			 							 })
+					   "home.html",
+					   map[string]string{"title_text":"",
+										 "captcha_id":captchaId, 
+										 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+										 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+										 "error_msg":reason,
+										 "user_url":urlStr,
+										 })
+
 		return
 	}
 	
 	
 	
-	urlStr := ctx.Params["url"]
+	
 	
 	//Check to make sure we were given a valid URL
 	validURL, isValid, err := validateURL(urlStr)
