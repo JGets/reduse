@@ -14,6 +14,7 @@ import(
 	"math/rand"
 	"strconv"
 	"regexp"
+	"fmt"
 	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
@@ -842,7 +843,31 @@ func submitReport(ctx *web.Context){
 	
 	//If the number of reports has increased over the flag point, send an email to the admins
 	if numReports >= NUM_REPORTS_TO_FLAG {
-		err = sendEmailToAdmins("Link Reported", "The link " + linkId + " was reported.")
+		emailBody := "The following link has been reported by users:\n"
+		emailBody += "\tLinkID: "+linkId+"\n"
+
+		target, _, _, err := db_linkForHash(upperHash)
+		if err != nil {
+			internalError(ctx, err)
+			return
+		}
+
+		emailBody += "\tTarget URL: "+ target + "\n\n"
+
+		reports, err := db_reportsForHash(upperHash)
+		if err != nil {
+			internalError(ctx, err)
+			return
+		}
+
+		for i, v := range reports {
+			emailBody += fmt.Sprintf("Report %v of %v:\n", i+1, len(reports))
+			emailBody += v.String() + "\n"
+		}
+
+
+
+		err = sendEmailToAdmins("Link Reported", emailBody)
 		if err != nil{
 			internalError(ctx, err)
 			return

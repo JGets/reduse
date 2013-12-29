@@ -3,6 +3,7 @@ package main
 import(
 	"strings"
 	"time"
+	"fmt"
 )
 
 type ReportType int
@@ -75,6 +76,10 @@ func NewReport(hash string, ip string, rtype ReportType, comment string) *Report
 	return &Report{hash, ip, rtype, comment, t}
 }
 
+
+func (r Report) String() string {
+	return fmt.Sprintf("Report {\n\tHash: %v\n\tOriginIP: %v\n\tType: %v\n\tComment: %v\n\tDate: %v\n}\n", r.Hash, r.OriginIP, r.Type.String(), r.Comment, r.Date.String())
+}
 
 
 
