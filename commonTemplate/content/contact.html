@@ -1,0 +1,125 @@
+{{define "common_content"}}
+	<script type="text/javascript">
+		
+		function validateContactForm(){
+			var emailField = document.getElementById("contact_user_email");
+			var email = emailField.value;
+
+
+			if(email == null || email == ""){
+				customAlert("Error", "You must provide your email address.")
+				return false;
+			}
+
+
+			//TODO: validate email
+			var validEmailRegex = new RegExp("^[0-9a-zA-Z\\.!#$%&'*+/=?^_`~\\{\\}\\|-]{1,64}@(([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)*[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]|\\[(IPv6:([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}|(([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5])\\.){3}([0-9]|[0-9][0-9]|[01][0-9][0-9]|2[0-5][0-5]))\\])$", "g");
+			var isValidEmail = validEmailRegex.test(email);
+			if(!isValidEmail){
+				customAlert("Error", "The email you entered appears to be invalid.");
+				return false;
+			}
+
+
+			var comm = $("#contact_comment").val();
+			if(comm == null || comm == "" || comm.replace(/( |\t|\n)/g, "").length == 0){
+				//The comment field was empty
+				customAlert("Error", "You must provide a reason in the comment section as to why you are contacting us.");
+				return false;
+			} else if (comm.replace(/(^((qwerty)+|(foo|bar)+|[0-9asdfjkl; ]+)$|lorem( ipsum)?)/gi, "").length == 0){
+				//The comment field is just full of random text
+				
+				if(comm.search(/lorem( ipsum)?/gi) >= 0){
+					customAlert("Error", "It looks like you have entered random text into the<br/>comment field.<br/><br/>Please provide a reason as to why you are contacting us.<br/><br/>Tip: Don't put <em>Lorem ipsum ...</em> in your comment.");
+				}
+				else{
+					customAlert("Error", "It looks like you have entered random text into the<br/>comment field.<br/><br/>Please provide a reason as to why you are contacting us.");
+				}
+				return false;
+			}
+			
+			if(!validateCaptcha()){
+				return false;
+			}
+			
+			
+			return true;
+		}
+		
+		function validateCaptcha() {
+			var capSoln = document.getElementById("captcha_soln").value;
+			var c_minLength = parseInt({{.captcha_soln_min_length}});
+			var c_maxLength = parseInt({{.captcha_soln_max_length}});
+			
+			if(capSoln == ""){
+				customAlert("Error", "You must enter a solution to the CAPTCHA");
+				return false;
+			} else if(capSoln.length < c_minLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too short");
+				return false;
+			} else if(capSoln.length > c_maxLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too long");
+				return false;
+			}
+			
+			if(capSoln.search("[^0-9]") != -1){
+				customAlert("Error", "A CAPTCHA solution contains only numbers (0-9)");
+				return false;
+			}
+			
+			return true
+		}
+		
+		function reloadCaptcha(){
+			document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
+			document.getElementById("captcha_soln").value = "";
+		}
+		
+		
+		$(document).ready(function(){
+			//validate the form when the user hits the submit button
+			$("#contact_form").submit(function(event){
+				if(!validateContactForm()){
+					event.preventDefault();
+				}
+			});
+			
+			{{if .error_msg}}
+				customAlert("Error", {{.error_msg}});
+			{{end}}
+			
+		});
+	</script>
+	<style>
+		
+		#contact_comment{
+			width:392px;
+			height:40pt;
+			resize:none;
+		}
+	</style>
+	<div class="content">
+		<h2>{{.title_text}}</h2>
+		Use this form to contact us.<br/>
+		<br/>
+		<div class="form_wrapper">
+			<form id="contact_form" class="main_form" action="page/contact/submit/" method="POST">
+				<input type="email" id="contact_user_email" name="contact_user_email" autocomplete="off" autocapitalize="off" placeholder="Enter Your Email Address Here" />
+				<textarea id="contact_comment" name="contact_comment" placeholder="Why are you contacting us? (max. 1000 characters)" maxlength="1000" autocomplete="off" autocapitalize="off"></textarea>
+				<div class="captcha_form">
+					<div id="captcha_image_wrapper">
+						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
+						<div id="captcha_options_wrapper">
+							<div id="captcha_reload_wrapper">
+								<a class="captcha_option_button" onclick="reloadCaptcha();"><i class="fa fa-repeat captcha_option_icon"></i></a>
+							</div>
+						</div>
+					</div>
+					<input id="captcha_soln" name="captcha_soln" class="captcha_solution" type="text" placeholder="Enter The Above Numbers Here" autocomplete="off" autocapitalize="off" />
+					<input type="hidden" id="captcha_id" name="captcha_id" value="{{.captcha_id}}" />
+				</div>
+				<input type="submit" value="Submit" />
+			</form>
+		</div>
+	</div>
+{{end}}

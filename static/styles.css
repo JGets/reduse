@@ -80,6 +80,8 @@ textarea{
 
 input[type="button"],
 input[type="submit"],
+input[type="email"],
+input[type="password"],
 input[type="text"]{
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
@@ -104,7 +106,9 @@ input[type="submit"]{
 	-webkit-appearance: none;
 }
 
-input[type="text"]{
+input[type="text"],
+input[type="password"],
+input[type="email"]{
 	background:white;
 	padding:3px;
 	background:transparent;
@@ -112,10 +116,14 @@ input[type="text"]{
 	font-size:14pt;
 }
 
-input[type="text"]::selection{
+input[type="text"]::selection,
+input[type="password"]::selection,
+input[type="email"]::selection{
 	background-color:#89D7D7;
 }
-input[type="text"]::-moz-selection{
+input[type="text"]::-moz-selection,
+input[type="password"]::-m0z-selection,
+input[type="email"]::-moz-selection{
 	background-color:#89D7D7;
 }
 
@@ -161,7 +169,7 @@ input[type="text"]::-moz-selection{
 	padding:0px 0px 80px 0px;*/
 	
 	min-height:100%;
-	margin-bottom:-80px;
+	margin-bottom:-55px;
 }
 .container:after{
 	content:"";
@@ -174,7 +182,7 @@ input[type="text"]::-moz-selection{
 
 .footer,
 .container:after{
-	height:80px;
+	height:55px;
 }
 
 .footer{
@@ -235,7 +243,16 @@ input[type="text"]::-moz-selection{
 }
 
 
+.main_form{
+	width:400px;
+	margin:auto;
+}
 
+.main_form input[type="text"],
+.main_form input[type="email"],
+.main_form input[type="password"]{
+	width:392px;
+}
 
 
 
@@ -341,13 +358,6 @@ input[type="text"]::-moz-selection{
 .captcha_form{
 	position:relative;
 	/*display: none;*/
-}
-
-
-
-#shorten_form{
-	width:400px;
-	margin:auto;
 }
 
 

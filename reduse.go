@@ -105,6 +105,8 @@ func main() {
 	web.Post("/page/generate/?", generate)
 	web.Get("/page/report/?", reportLink)
 	web.Post("/page/report/submit/?", submitReport)
+	web.Get("/page/contact/?", contactPage)
+	web.Post("/page/contact/submit/?", submitContact)
 	web.Get("/rsrc/captcha/img/reload/(.+)\\.png", reloadCaptchaImage)
 	web.Get("/rsrc/captcha/img/(.+)\\.png", serveCaptchaImage)
 	//web.Get("/rsrc/captcha/audio/(.+)\\.wav", serveCaptchaAudio)

@@ -10,6 +10,7 @@ import(
 	"net"
 	"net/url"
 	"net/http"
+	"net/mail"
 	"math/rand"
 	"strconv"
 	"regexp"
@@ -42,6 +43,10 @@ func commonTemplate(ctx *web.Context, contentFile string, args map[string]string
 	
 	if err != nil{
 		logger.Println("ERROR: ", err.Error())
+	}
+
+	if args == nil {
+		args = make(map[string]string)
 	}
 	
 	args["content_file"] = "commonTemplate/content/" + contentFile
@@ -196,6 +201,116 @@ func internalError(ctx *web.Context, err error){
 				 					 "body_text":err.Error(),
 				 					 })
 }
+
+
+
+func contactPage(ctx *web.Context) {
+	// CAPTCHA length will be in [CAPTCHA_MIN_LENGTH, CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE]
+	captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
+	
+	
+	commonTemplate(ctx,
+				   "contact.html",
+				   map[string]string{"title_text":"Contact Us",
+									 "captcha_id":captchaId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "user_url":ctx.Params["url"],
+									 })
+}
+
+func submitContact(ctx *web.Context) {
+	capId := ctx.Params["captcha_id"]
+	capSoln := ctx.Params["captcha_soln"]
+	
+	usrEmailStr := ctx.Params["contact_user_email"]
+	comment := ctx.Params["contact_comment"]
+	
+	//Make sure the user filled out the form
+	if usrEmailStr == "" {
+		commonTemplate(ctx,
+				   "contact.html",
+				   map[string]string{"title_text":"Contact Us",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "error_msg":"You must provide your email address",
+									 })
+		return
+	} else if comment == "" {
+		commonTemplate(ctx,
+				   "contact.html",
+				   map[string]string{"title_text":"Contact Us",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "error_msg":"You must provide a comment as to why you are contacting us.",
+									 })
+		return
+	} else if capSoln == "" {
+		commonTemplate(ctx,
+				   "contact.html",
+				   map[string]string{"title_text":"Contact Us",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "error_msg":"You must provide a solution to the CAPTCHA",
+									 })
+		return
+	}
+	
+	//Verify the user's CAPTCHA solution
+	goodCapSoln, reason, err := goodCaptchaSolution(ctx, capId, capSoln)
+	if err != nil {
+		internalError(ctx, err)
+		return
+	} else if !goodCapSoln {
+		commonTemplate(ctx,
+					   "generic.html",
+					   map[string]string{"title_text":"Incorrect CAPTCHA",
+			 							 "body_text":reason,
+			 							 "show_try_again":"true",
+			 							 "try_again_path":"page/contact/",
+			 							 })
+		return
+	}
+
+
+	//verify the user's email address:
+	emailAddr, err := mail.ParseAddress(usrEmailStr)
+
+	if err != nil {
+		internalError(ctx, err)
+		return
+	} else if emailAddr == nil || emailAddr.Address != usrEmailStr {
+		commonTemplate(ctx,
+				   "contact.html",
+				   map[string]string{"title_text":"Contact Us",
+									 "captcha_id":capId, 
+									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+									 "error_msg":"The email address you provided appears to be invalid.",
+									 })
+		return
+	}
+
+
+	subject := "Contact Request to Redu.se Admins"
+	body := "User Email: " + emailAddr.String() + "\n"
+	body += "User Comment:\n" + comment
+
+	err = sendEmailToAdmins(subject, body)
+	if err != nil {
+		internalError(ctx, err)
+		return
+	}
+
+	commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Thank You", "body_text":"Your contact request was submitted"})
+
+}
+
+
+
 
 
 // func blacklistedPage(ctx *web.Context, urlStr string){
