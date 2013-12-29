@@ -219,6 +219,17 @@ func contactPage(ctx *web.Context) {
 									 })
 }
 
+func contactPageError(ctx *web.Context, errorMsg string){
+	commonTemplate(ctx,
+					   "contact.html",
+					   map[string]string{"title_text":"Contact Us",
+										 "captcha_id":capId, 
+										 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
+										 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
+										 "error_msg":errorMsg,
+										 })
+}
+
 func submitContact(ctx *web.Context) {
 	capId := ctx.Params["captcha_id"]
 	capSoln := ctx.Params["captcha_soln"]
@@ -228,34 +239,13 @@ func submitContact(ctx *web.Context) {
 	
 	//Make sure the user filled out the form
 	if usrEmailStr == "" {
-		commonTemplate(ctx,
-				   "contact.html",
-				   map[string]string{"title_text":"Contact Us",
-									 "captcha_id":capId, 
-									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
-									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
-									 "error_msg":"You must provide your email address",
-									 })
+		contactPageError("You must provide your email address")
 		return
 	} else if comment == "" {
-		commonTemplate(ctx,
-				   "contact.html",
-				   map[string]string{"title_text":"Contact Us",
-									 "captcha_id":capId, 
-									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
-									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
-									 "error_msg":"You must provide a comment as to why you are contacting us.",
-									 })
+		contactPageError("You must provide a comment as to why you are contacting us")
 		return
 	} else if capSoln == "" {
-		commonTemplate(ctx,
-				   "contact.html",
-				   map[string]string{"title_text":"Contact Us",
-									 "captcha_id":capId, 
-									 "captcha_soln_min_length":strconv.Itoa(CAPTCHA_MIN_LENGTH),
-									 "captcha_soln_max_length":strconv.Itoa(CAPTCHA_MIN_LENGTH + CAPTCHA_VARIANCE),
-									 "error_msg":"You must provide a solution to the CAPTCHA",
-									 })
+		contactPageError("You must provide a solution to the CAPTCHA")
 		return
 	}
 	
@@ -501,14 +491,6 @@ func generate(ctx *web.Context){
 		internalError(ctx, err)
 		return
 	} else if !goodCapSoln {
-		// commonTemplate(ctx,
-		// 			   "generic.html",
-		// 			   map[string]string{"title_text":"Incorrect CAPTCHA",
-		// 	 							 "body_text":reason,
-		// 	 							 "show_try_again":"true",
-		// 	 							 "user_url":ctx.Params["url"],
-		// 	 							 })
-
 		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 		commonTemplate(ctx,
 					   "home.html",
@@ -917,11 +899,6 @@ func submitReport(ctx *web.Context){
 	} else if !exists {
 		//The link doens't exist
 		bStr := "The link redu.se/" + linkId + " does not exist." 
-		// commonTemplate(ctx,
-		// 			   "generic.html",
-		// 			   map[string]string{"title_text":"Link Does Not Exist",
-		// 	 							 "body_text":bStr,
-		// 	 							 })
 
 		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
 		commonTemplate(ctx,
