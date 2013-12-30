@@ -100,6 +100,10 @@ func showTerms(ctx *web.Context){
 	commonTemplate(ctx, "terms.html", map[string]string{})
 }
 
+func showDisabled(ctx *web.Context){
+	commonTemplate(ctx, "disabled.html", nil)
+}
+
 
 /*
 	Serves a CAPTCHA image

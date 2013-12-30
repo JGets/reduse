@@ -101,6 +101,7 @@ func main() {
 	}
 	
 	web.Get("/", home)
+	web.Get("/page/disabled/?", showDisabled)
 	web.Get("/page/terms/?", showTerms)
 	web.Post("/page/generate/?", generate)
 	web.Get("/page/report/?", reportLink)
