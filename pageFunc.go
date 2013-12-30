@@ -283,9 +283,9 @@ func submitContact(ctx *web.Context) {
 
 
 	subject := "Contact Request to Redu.se Admins"
-	body := "<strong>User Name:</strong> " + html.EscapeString(usrNameStr) + "<br/>"
-	body += "<strong>User Email:</strong> " + html.EscapeString(emailAddr.String()) + "<br/>"
-	body += "<strong>User Comment:</strong><div style=\"padding-left:15px;\">" + html.EscapeString(comment) + "</div>"
+	body := "<strong>User Name:</strong> " + escapeHTML(usrNameStr) + "<br/>"
+	body += "<strong>User Email:</strong> " + escapeHTML(emailAddr.String()) + "<br/>"
+	body += "<strong>User Comment:</strong><div style=\"padding-left:15px;\">" + escapeHTML(comment) + "</div>"
 
 	err = sendHTMLEmailToAdmins(subject, body)
 	if err != nil {
@@ -849,8 +849,8 @@ func submitReport(ctx *web.Context){
 	
 	//If the number of reports has increased over the flag point, send an email to the admins
 	if numReports >= NUM_REPORTS_TO_FLAG {
-		emailBody := "The following link has been reported by users:\n"
-		emailBody += "\tLinkID: "+linkId+"\n"
+		emailBody := "The following link has been reported by users:<br/>"
+		emailBody += "<strong>LinkID:</strong> " + escapeHTML(linkId) + "<br/>"
 
 		target, _, _, err := db_linkForHash(upperHash)
 		if err != nil {
@@ -858,7 +858,7 @@ func submitReport(ctx *web.Context){
 			return
 		}
 
-		emailBody += "\tTarget URL: "+ target + "\n\n"
+		emailBody += "<strong>Target URL:</strong> <a href=\"" + target + "\">" + escapeHTML(target) + "</a><br/><br/>"
 
 		reports, err := db_reportsForHash(upperHash)
 		if err != nil {
@@ -867,13 +867,13 @@ func submitReport(ctx *web.Context){
 		}
 
 		for i, v := range reports {
-			emailBody += fmt.Sprintf("Report %v of %v:\n", i+1, len(reports))
-			emailBody += v.String() + "\n"
+			emailBody += fmt.Sprintf("Report %v of %v:<br/>", i+1, len(reports))
+			emailBody += "<div style=\"padding-lefT:15px;\">" + escapeHTML(v.String()) + "</div><br/>"
 		}
 
 
 
-		err = sendEmailToAdmins("Link Reported", emailBody)
+		err = sendHTMLEmailToAdmins("Link Reported", emailBody)
 		if err != nil{
 			internalError(ctx, err)
 			return
@@ -882,4 +882,14 @@ func submitReport(ctx *web.Context){
 	
 	//Tell the user that their report has been recieved
 	commonTemplate(ctx, "generic.html", map[string]string{"title_text":"Thank You", "body_text":"Your report was submitted"})
+}
+
+
+func escapeHTML(str string) string {
+	str = html.EscapeString(str)
+
+	str = strings.Replace(str, "\n", "<br/>", -1)
+	str = strings.Replace(str, "\t", "&nbsp;&nbsp;&nbsp;&nbsp", -1)
+
+	return str
 }
