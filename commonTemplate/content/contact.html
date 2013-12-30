@@ -2,10 +2,21 @@
 	<script type="text/javascript">
 		
 		function validateContactForm(){
-			var emailField = document.getElementById("contact_user_email");
-			var email = emailField.value;
+			var name = $("#contact_user_name").val();
+			if(name == null || name == ""){
+				customAlert("Error", "Please eneter your name.");
+				return false;
+			}
+
+			var nameRegex = new RegExp("^[a-zA-Z ]+$", "g");
+			var isValidName = nameRegex.test(name);
+			if(!isValidName){
+				customAlert("Error", "It appears you have entered an invalid name.<br/><br/>Note: only a-z &amp; space characters are allowed.");
+				return false;
+			}
 
 
+			var email = $("#contact_user_email").val();
 			if(email == null || email == ""){
 				customAlert("Error", "You must provide your email address.")
 				return false;
@@ -104,6 +115,7 @@
 		<br/>
 		<div class="form_wrapper">
 			<form id="contact_form" class="main_form" action="page/contact/submit/" method="POST">
+				<input type="text" id="contact_user_name" name="contact_user_name" autocomplete="off" placeholder="Enter Your Name Here" value="{{.user_name}}"/>
 				<input type="email" id="contact_user_email" name="contact_user_email" autocomplete="off" autocapitalize="off" placeholder="Enter Your Email Address Here" value="{{.user_email}}" />
 				<textarea id="contact_comment" name="contact_comment" placeholder="Why are you contacting us? (max. 1000 characters)" maxlength="1000" autocomplete="off" autocapitalize="off">{{.user_comment}}</textarea>
 				<div class="captcha_form">

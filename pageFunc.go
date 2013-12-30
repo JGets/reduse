@@ -1,6 +1,7 @@
 package main
 
 import(
+	"html"
 	"html/template"
 	"crypto/md5"
 	"io"
@@ -220,7 +221,7 @@ func contactPage(ctx *web.Context) {
 									 })
 }
 
-func contactPageError(ctx *web.Context, capId string, errorMsg string, comment string, usrEmail string){
+func contactPageError(ctx *web.Context, capId string, errorMsg string, comment string, usrEmail string, usrName string){
 	commonTemplate(ctx,
 					   "contact.html",
 					   map[string]string{"title_text":"Contact Us",
@@ -230,6 +231,7 @@ func contactPageError(ctx *web.Context, capId string, errorMsg string, comment s
 										 "error_msg":errorMsg,
 										 "user_comment":comment,
 									 	 "user_email":usrEmail,
+									 	 "user_name":usrName,
 										 })
 }
 
@@ -237,18 +239,21 @@ func submitContact(ctx *web.Context) {
 	capId := ctx.Params["captcha_id"]
 	capSoln := ctx.Params["captcha_soln"]
 	
+	usrNameStr := ctx.Params["contact_user_name"]
 	usrEmailStr := ctx.Params["contact_user_email"]
 	comment := ctx.Params["contact_comment"]
 	
 	//Make sure the user filled out the form
-	if usrEmailStr == "" {
-		contactPageError(ctx, capId, "You must provide your email address", comment, usrEmailStr)
+	if usrNameStr == "" {
+		contactPageError(ctx, capId, "Please Enter your name", comment, usrEmailStr, usrNameStr)
+	} else if usrEmailStr == "" {
+		contactPageError(ctx, capId, "You must provide your email address", comment, usrEmailStr, usrNameStr)
 		return
 	} else if comment == "" {
-		contactPageError(ctx, capId, "You must provide a comment as to why you are contacting us", comment, usrEmailStr)
+		contactPageError(ctx, capId, "You must provide a comment as to why you are contacting us", comment, usrEmailStr, usrNameStr)
 		return
 	} else if capSoln == "" {
-		contactPageError(ctx, capId, "You must provide a solution to the CAPTCHA", comment, usrEmailStr)
+		contactPageError(ctx, capId, "You must provide a solution to the CAPTCHA", comment, usrEmailStr, usrNameStr)
 		return
 	}
 	
@@ -259,7 +264,7 @@ func submitContact(ctx *web.Context) {
 		return
 	} else if !goodCapSoln {
 		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
-		contactPageError(ctx, captchaId, reason, comment, usrEmailStr)
+		contactPageError(ctx, captchaId, reason, comment, usrEmailStr, usrNameStr)
 		return
 	}
 
@@ -272,16 +277,17 @@ func submitContact(ctx *web.Context) {
 		return
 	} else if emailAddr == nil || emailAddr.Address != usrEmailStr {
 		captchaId := captcha.NewLen(CAPTCHA_MIN_LENGTH + rand.Intn(CAPTCHA_VARIANCE + 1))
-		contactPageError(ctx, captchaId, "The email address you provided appears to be invalid.", comment, usrEmailStr)
+		contactPageError(ctx, captchaId, "The email address you provided appears to be invalid.", comment, usrEmailStr, usrNameStr)
 		return
 	}
 
 
 	subject := "Contact Request to Redu.se Admins"
-	body := "User Email: " + emailAddr.String() + "\n"
-	body += "User Comment:\n" + comment
+	body := "<strong>User Name:</strong> " + html.EscapeString(usrNameStr) + "<br/>"
+	body += "<strong>User Email:</strong> " + html.EscapeString(emailAddr.String()) + "<br/>"
+	body += "<strong>User Comment:</strong><div style=\"padding-left:15px;\">" + html.EscapeString(comment) + "</div>"
 
-	err = sendEmailToAdmins(subject, body)
+	err = sendHTMLEmailToAdmins(subject, body)
 	if err != nil {
 		internalError(ctx, err)
 		return

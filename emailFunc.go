@@ -47,13 +47,28 @@ func parseAddresses(addresses string) []string{
 }
 
 func sendEmailToAdmins(subject, body string) error{
-
 	if devMode {
-		subject = "Dev: " + subject
-		body = "Dev:\r\n" + body
+		subject = "(DEV) " + subject
+		body = "(DEV)\r\n" + body
 	}
 
 	emailBody := "To: "+ adminEmailAddrsString + "\r\nSubject: " + subject + "\r\n\r\n" + body
+	
+	err := smtp.SendMail(emailServerAddr, auth, emailUsername, adminEmailAddrs, []byte(emailBody))
+	
+	return err
+}
+
+func sendHTMLEmailToAdmins(subject, body string) error {
+
+	if devMode {
+		subject = "(DEV) " + subject
+		body = "<strong>(DEV)</strong><br/>" + body
+	}
+
+	mime := "MIME-version: 1.0;\r\nContent-Type: text/html; charset=\"UTF-8\";\r\n\r\n";
+
+	emailBody := "To: "+ adminEmailAddrsString + "\r\nSubject: " + subject + "\r\n" + mime + body
 	
 	err := smtp.SendMail(emailServerAddr, auth, emailUsername, adminEmailAddrs, []byte(emailBody))
 	
