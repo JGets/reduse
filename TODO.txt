@@ -1,5 +1,6 @@
 Redu.se TODOs:
 
+- add help/info pop/hover-overs for all form nput fields
 - refactor database functions to return a new error type for links that do not exist, rather than having a seperate boolean return value
 - add URL blacklist checking
 	- by domain, subdomain???
