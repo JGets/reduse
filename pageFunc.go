@@ -101,7 +101,11 @@ func showTerms(ctx *web.Context){
 }
 
 func showDisabled(ctx *web.Context){
-	commonTemplate(ctx, "disabled.html", nil)
+	commonTemplate(ctx, 
+				   "generic.html", 
+				   map[string]string{"title_text":"Link Disabled", 
+									 "body_text":"The link you are trying to access has been disabled.",
+									 })
 }
 
 
