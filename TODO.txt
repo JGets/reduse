@@ -5,11 +5,11 @@ Redu.se TODOs:
 - add URL blacklist checking
 	- by domain, subdomain???
 - add CAPTCHA audio support to frontend
-	- need to find reliabel way to play audio captcha after user has clicked on reload button
+	- need to find reliable way to play audio captcha after user has clicked on reload button
 - add admin page/portal/control panel
 	- requires admins table in DB
 	- Design:	
 		 - OAUTH?
 		 - Secure cookie session?
-- ¿ blacklist user IP addresses ?
+- blacklist user IP addresses?
 	- i.e. block spammers, bots, etc. based on IP address?
