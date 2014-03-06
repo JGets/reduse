@@ -413,6 +413,7 @@ func validateURL(urlStr string) (string, bool, error){
 		//Check if the URL actually exists (ie. it points to a real webserver)
 		resp, err := http.Get(u.String())
 		if err != nil {
+			logger.Printf("Could not verify existence of URL: %v\n", err)
 			return URL_DOES_NOT_EXIST, false, nil
 		}
 		//close the response's body on return
