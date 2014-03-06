@@ -1,5 +1,7 @@
 Redu.se TODOs:
 
+- add some form of loading text to the CAPTCHAs for when the images haven't shown up yet
+- adjust URL validation - currently rejects some valid URLs (ie. LinkedIn profile URLs); !-! only seems to happen on Heroku !-!
 - add help/info pop/hover-overs for all form input fields
 - refactor database functions to return a new error type for links that do not exist, rather than having a seperate boolean return value
 - add URL blacklist checking
