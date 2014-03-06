@@ -22,7 +22,30 @@
 			The URL you gave could not be parsed to a valid URL
 		{{end}}
 		{{if .url_does_not_exist}}
-			We could not verify the existence of the URL you gave.
+			We could not verify the existence of the URL you gave.<br/>
+			<br/>
+
+			<div>
+				One of the following may have happened:
+				<div style="text-align:left; width:650px; margin:auto;">
+					<ul style="margin-top:0px;">
+						<li>
+							Our server was unable to reach a webserver at the URL you specified
+						</li>
+						<li>
+							Our server's request to the URL you gave timed-out
+						</li>
+						<li>
+							There are too many redirects from the URL you gave to the actual webpage
+						</li>
+					</ul>
+				</div>
+			</div>
+			
+			<br/>
+			Try checking to make sure the URL you enetered is correct.<br>
+			If you continue to have issues, please <a href="page/contact/">Contact Us</a>
+
 		{{end}}
 		{{if .other_reason}}
 			{{.other_reason}}

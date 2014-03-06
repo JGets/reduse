@@ -421,7 +421,7 @@ func validateURL(urlStr string) (string, bool, error){
 		
 		//if we did not get a '200 OK' response, reject the URL
 		if resp.StatusCode != http.StatusOK {
-			logger.Printf("Response for URL axistence check: %v\n", resp.StatusCode)
+			logger.Printf("Response for URL existence check: %v\n", resp.StatusCode)
 			return URL_DOES_NOT_EXIST, false, nil
 		}
 		
