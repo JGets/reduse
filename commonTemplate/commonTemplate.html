@@ -15,7 +15,7 @@
 			{{/* Only site-wide javascript should go here. Any page specific code should be put into that page's template */}}
 			$(document).ready(function(){
 				bindAnchorHover();
-				
+
 			});
 			
 			function bindAnchorHover(){
@@ -49,6 +49,7 @@
 						<a href="{{.base_url}}" id="title_link">{{.app_name}}</a>
 					</h1>
 				</header>
+
 				{{template "common_content" .}}
 				
 				<!-- <div style="position:absolute; width:1000px; height:200px; bottom:0px;">

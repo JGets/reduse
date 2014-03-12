@@ -16,6 +16,8 @@ import(
 	"strconv"
 	"regexp"
 	"fmt"
+
+	"time"
 	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
@@ -117,6 +119,8 @@ func showDisabled(ctx *web.Context){
 */
 func serveCaptchaImage(ctx *web.Context, id string){
 	
+	
+
 	width, err := strconv.Atoi(ctx.Params["width"])
 	if err != nil {
 		logger.Printf("Error: could not parse captcha image width of '%v'\n%v\n", ctx.Params["width"], err.Error())
@@ -131,6 +135,14 @@ func serveCaptchaImage(ctx *web.Context, id string){
 	
 	//tell the user's browser not to cache the image file
 	ctx.SetHeader("Cache-Control", "no-cache", true)
+
+
+
+	if devMode {
+		time.Sleep(10 * time.Second)
+	}
+
+
 	
 	err = captcha.WriteImage(ctx, id, width, height)
 	if err != nil {

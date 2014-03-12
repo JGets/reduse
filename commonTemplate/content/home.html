@@ -171,15 +171,38 @@
 		
 		
 		var captchaAudioIsPlaying = false;
+
+
+		// function reloadCaptcha(){
+		// 	document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
+		// 	document.getElementById("captcha_soln").value = ""
+			
+		// 	if(captchaAudioIsPlaying){
+		// 		stopCaptchaAudio();
+		// 	}
+		// }
+
+
 		function reloadCaptcha(){
-			document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
-			document.getElementById("captcha_soln").value = ""
-			
-			if(captchaAudioIsPlaying){
-				stopCaptchaAudio();
-			}
-			
+
+			$(".captcha_option_button i").addClass("fa-spin")
+
+			$("#captcha_loading_text").fadeIn(250);
+			$("#captchaImg").fadeTo(250, 0, function(){
+
+				document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
+				document.getElementById("captcha_soln").value = ""
+
+				$("#captchaImg").load(function(){
+					$(".captcha_option_button i").removeClass("fa-spin");
+					$("#captcha_loading_text").fadeOut(250);
+					$("#captchaImg").fadeTo(250, 1);
+				});
+			});
 		}
+
+
+
 		
 		{{/*
 		// function playCaptchaAudio(){
@@ -226,6 +249,10 @@
 				}
 			});
 		});
+
+		$(window).load(function(){
+			$(".captcha_loading_text").hide();
+		});
 	</script>
 	<div class="content">
 		{{.app_name}} is a simple web application designed to allow you to reduce the size of a URL
@@ -236,6 +263,11 @@
 					<!-- Please prove you're human:<br/> -->
 					
 					<div id="captcha_image_wrapper">
+
+						<div id="captcha_loading_text" class="captcha_loading_text" style="position:absolute; top:30px; z-index:-1; text-align:center; width:400px; font-size:22pt;">
+							<i class="fa fa-spinner fa-spin"></i>
+						</div>
+
 						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
 					
 						<div id="captcha_options_wrapper">
@@ -263,4 +295,15 @@
 		</div-->
 		*/}}
 	</div>
+	<noscript>
+		<div id="custom_alert_wrapper" style="display:block;">
+			<div id="custom_alert_content">
+				<h2><span id="custom_alert_title">Javascript Required</span></h2>
+				<div id="custom_alert_text">Javascript is required for {{.app_name}} to function.<br/>Please enable javascript and reload the page.<br/><br/></div>
+				<!--div id="custom_alert_close_button_wrapper">
+					<input type="button" id="custom_alert_close_button" onclick="closeCustomAlert();" value="Close" />
+				</div-->
+			</div>
+		</div>
+	</noscript>
 {{end}}
