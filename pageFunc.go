@@ -17,8 +17,6 @@ import(
 	"regexp"
 	"fmt"
 
-	"time"
-	
 	"github.com/hoisie/web"
 	"github.com/dchest/captcha"
 )
@@ -136,14 +134,6 @@ func serveCaptchaImage(ctx *web.Context, id string){
 	//tell the user's browser not to cache the image file
 	ctx.SetHeader("Cache-Control", "no-cache", true)
 
-
-
-	if devMode {
-		time.Sleep(1000 * time.Millisecond)
-	}
-
-
-	
 	err = captcha.WriteImage(ctx, id, width, height)
 	if err != nil {
 		logger.Println("Error, could not write CAPTCHA image")
