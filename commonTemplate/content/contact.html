@@ -57,34 +57,7 @@
 			return true;
 		}
 		
-		function validateCaptcha() {
-			var capSoln = document.getElementById("captcha_soln").value;
-			var c_minLength = parseInt({{.captcha_soln_min_length}});
-			var c_maxLength = parseInt({{.captcha_soln_max_length}});
-			
-			if(capSoln == ""){
-				customAlert("Error", "You must enter a solution to the CAPTCHA");
-				return false;
-			} else if(capSoln.length < c_minLength){
-				customAlert("Error", "Your solution to the CAPTCHA is too short");
-				return false;
-			} else if(capSoln.length > c_maxLength){
-				customAlert("Error", "Your solution to the CAPTCHA is too long");
-				return false;
-			}
-			
-			if(capSoln.search("[^0-9]") != -1){
-				customAlert("Error", "A CAPTCHA solution contains only numbers (0-9)");
-				return false;
-			}
-			
-			return true
-		}
 		
-		function reloadCaptcha(){
-			document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100";
-			document.getElementById("captcha_soln").value = "";
-		}
 		
 		
 		$(document).ready(function(){
@@ -101,6 +74,70 @@
 			
 		});
 	</script>
+
+	<script type="text/javascript">
+		// CAPTCHA front-end javascript
+
+		var captchaReloading = true;
+		function reloadCaptcha(){
+			//prevent any action when the user clicks on the reload button multiple times
+			if(captchaReloading){
+				return;
+			}
+			captchaReloading = true;
+
+			//spin the reload button
+			$(".captcha_option_button i").addClass("fa-spin")
+
+			//animate the hiding of the current CAPTCHA and showing of the loading spinner
+			$("#captcha_loading_text").fadeIn(250);
+			$("#captchaImg").fadeTo(250, 0, function(){
+				//get a new CAPTCHA image & clear out the solution input field; append a unique parameter (seconds since epoch) to the image source to make
+					//it unique, to force some browsers to trigger the onload function
+				var d = new Date();
+				document.getElementById("captchaImg").src = "{{.base_url}}rsrc/captcha/img/reload/{{.captcha_id}}.png?width=400&height=100&unique=" + d.getTime();
+				document.getElementById("captcha_soln").value = ""
+			});
+		}
+
+		function captchaLoaded() {
+			//stop reload button spinning & animate showing of the new CAPTCHA & hiding of the loading spinner
+			$(".captcha_option_button i").removeClass("fa-spin");
+			$("#captcha_loading_text").fadeOut(250);
+			$("#captchaImg").fadeTo(250, 1);
+
+			//allow users to reload the CAPTCHA again
+			captchaReloading = false;
+		}
+
+		function validateCaptcha(){
+			var capSoln = document.getElementById("captcha_soln").value;
+			var c_minLength = parseInt({{.captcha_soln_min_length}});
+			var c_maxLength = parseInt({{.captcha_soln_max_length}});
+			
+			//make sure it's non-empty, & the length is within the expected range
+			if(capSoln == ""){
+				customAlert("Error", "You must enter a solution to the CAPTCHA");
+				return false;
+			} else if(capSoln.length < c_minLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too short");
+				return false;
+			} else if(capSoln.length > c_maxLength){
+				customAlert("Error", "Your solution to the CAPTCHA is too long");
+				return false;
+			}
+			
+			//make sure the user only entered numbers
+			if(capSoln.search("[^0-9]") != -1){
+				customAlert("Error", "A CAPTCHA solution contains only numbers (0-9)");
+				return false;
+			}
+			return true;
+		}
+		
+	</script>
+
+
 	<style>
 		
 		#contact_comment{
@@ -120,7 +157,10 @@
 				<textarea id="contact_comment" name="contact_comment" placeholder="Why are you contacting us? (max. 1000 characters)" maxlength="1000" autocomplete="off" autocapitalize="off">{{.user_comment}}</textarea>
 				<div class="captcha_form">
 					<div id="captcha_image_wrapper">
-						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px;" /><br/>
+						<div id="captcha_loading_text" class="captcha_loading_text">
+							<i class="fa fa-spinner fa-spin"></i>
+						</div>
+						<img id="captchaImg" src="{{.base_url}}rsrc/captcha/img/{{.captcha_id}}.png?width=400&height=100" style="width:400px; height:100px; opacity:0;" onload="captchaLoaded();" /><br/>
 						<div id="captcha_options_wrapper">
 							<div id="captcha_reload_wrapper">
 								<a class="captcha_option_button" onclick="reloadCaptcha();"><i class="fa fa-repeat captcha_option_icon"></i></a>
@@ -134,4 +174,16 @@
 			</form>
 		</div>
 	</div>
+	<noscript>
+		<!-- Alert to tell users that this page requires javascript -->
+		<div id="custom_alert_wrapper" style="display:block;">
+			<div id="custom_alert_content">
+				<h2><span id="custom_alert_title">Javascript Required</span></h2>
+				<div id="custom_alert_text">Javascript is required for this page to function.<br/>Please enable javascript and reload the page.<br/><br/></div>
+				<!--div id="custom_alert_close_button_wrapper">
+					<input type="button" id="custom_alert_close_button" onclick="closeCustomAlert();" value="Close" />
+				</div-->
+			</div>
+		</div>
+	</noscript>
 {{end}}

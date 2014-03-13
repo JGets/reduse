@@ -349,6 +349,9 @@ input[type="email"]::-moz-selection{
 	-e-border-radius: 25px;
 	border-radius: 25px;
 	padding:6px;
+	height:16px;
+	width:16px;
+	text-align:center;
 }
 
 .captcha_option_button{
@@ -358,6 +361,15 @@ input[type="email"]::-moz-selection{
 .captcha_form{
 	position:relative;
 	/*display: none;*/
+}
+
+.captcha_loading_text {
+	position:absolute;
+	top:30px;
+	z-index:-1;
+	text-align:center;
+	width:400px;
+	font-size:22pt;
 }
 
 

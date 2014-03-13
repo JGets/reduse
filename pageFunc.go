@@ -139,7 +139,7 @@ func serveCaptchaImage(ctx *web.Context, id string){
 
 
 	if devMode {
-		time.Sleep(10 * time.Second)
+		time.Sleep(1000 * time.Millisecond)
 	}
 
 
