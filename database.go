@@ -6,7 +6,8 @@ import(
 	// "strings"
 	"time"
 	
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 const(
@@ -30,7 +31,12 @@ var dsn string
 */
 func initDatabase(dbname, address, username, password string) error {
 	//Set up the DSN (Data Source Name) for the database
-	dsn = username + ":" + password + "@(" + address + ":3306)/" + dbname
+	// dsn = username + ":" + password + "@(" + address + ":3306)/" + dbname	//mysql
+	// dsn = username + ":" + password + "@(" + address + ":5432)/" + dbname	//psql
+
+	// dsn = "postgress://" +  username + ":" + password + "@" + address + "/" + dbname + ""
+
+	dsn = "user=" + username + " password=" + password + " dbname="+dbname + " host=" + address + " sslmode=disable"
 	
 	//Open the database
 	db, err := openDB()
@@ -59,7 +65,8 @@ func initDatabase(dbname, address, username, password string) error {
 		error:		Any error that was encountered, or nil
 */
 func openDB() (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
+	// db, err := sql.Open("mysql", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +151,7 @@ func db_linkForHash(hash string) (string, int, bool, error){
 func db_linkForHashHelper(db *sql.DB, hash string) (string, int, bool, error){
 	var link string
 	var numReports int
-	err := db.QueryRow("SELECT link, numReports FROM links WHERE hash=?", hash).Scan(&link, &numReports)
+	err := db.QueryRow("SELECT link, \"numReports\" FROM links WHERE hash=$1", hash).Scan(&link, &numReports)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -204,7 +211,7 @@ func db_addLinkHelper(db *sql.DB, hash string, url string) error {
 	}
 	
 	//Prepare the insert query
-	stmt, err := db.Prepare("INSERT INTO links(hash, link) VALUES(?, ?)")
+	stmt, err := db.Prepare("INSERT INTO links(hash, link) VALUES($1, $2)")
 	if err != nil {
 		return err
 	}
@@ -295,7 +302,7 @@ func db_incrementReportCountHelper(db *sql.DB, hash string) (int, error){
 	}
 	
 	//Prepare the update query
-	stmt, err := db.Prepare("UPDATE links SET numReports=? WHERE hash=?")
+	stmt, err := db.Prepare("UPDATE links SET \"numReports\"=$1 WHERE hash=$2")
 	if err != nil {
 		return -1, err
 	}
@@ -369,7 +376,7 @@ func db_addReportHelper(db *sql.DB, report *Report) (numReports int, linkExists 
 	/*
 		Attempt to insert a new Report row into the reports table
 	*/
-	stmt, err := db.Prepare("INSERT INTO reports(links_hash, ip_addr, type, comment, date) VALUES(?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO reports(links_hash, ip_addr, type, comment, date) VALUES($1, $2, $3, $4, $5)")
 	if err != nil{
 		return -1, true, err
 	}
@@ -390,7 +397,7 @@ func db_addReportHelper(db *sql.DB, report *Report) (numReports int, linkExists 
 	/*
 		Attempt to update the links table for this link with the new number of reports that the link has accrued
 	*/
-	stmt, err = db.Prepare("UPDATE links SET numReports=? WHERE hash=?")
+	stmt, err = db.Prepare("UPDATE links SET \"numReports\"=$1 WHERE hash=$2")
 	if err != nil {
 		return -1, true, err
 	}
@@ -426,22 +433,24 @@ func db_reportsForHashHelper(db *sql.DB, hash string) ([]Report, error){
 	ret := make([]Report, 0, NUM_REPORTS_TO_FLAG) //make a slice with initial capacity of the number of reports that cause a flag
 	
 	
-	rows, err := db.Query("SELECT links_hash, ip_addr, type, comment, date FROM reports WHERE links_hash=?", hash)
+	rows, err := db.Query("SELECT links_hash, ip_addr, type, comment, date FROM reports WHERE links_hash=$1", hash)
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
-		var rH, rI, rT, rC, rD string
+		var rH, rI, rT, rC string
+		var rD time.Time
 		if err := rows.Scan(&rH, &rI, &rT, &rC, &rD); err != nil {
 			return nil, err
 		}
 		
-		t, err := time.Parse(TIMESTAMP_FORMAT, rD)
-		if err != nil {
-			return nil, err
-		}
+		// t, err := time.Parse(TIMESTAMP_FORMAT, rD)
+		// if err != nil {
+		// 	return nil, err
+		// }
 		
-		rep := Report{rH, rI, ReportTypeForString(rT), rC, t}
+		// rep := Report{rH, rI, ReportTypeForString(rT), rC, t}
+		rep := Report{rH, rI, ReportTypeForString(rT), rC, rD}
 		
 		ret = append(ret, rep) //append this report to the slice
 		
