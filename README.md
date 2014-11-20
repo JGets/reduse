@@ -12,7 +12,7 @@ Similarly, Redu.se treats GET parameters the same way. Consider you want to link
 Redu.se is written entirely in the [Go](http://golang.org) programming language, and makes use of the following 3rd party packages:
 * [Web.go](http://webgo.io) for a simplified web app framework
 * [Captcha](http://github.com/dchest/captcha) for generating and verifying [CAPTCHA](http://en.wikipedia.org/wiki/CAPTCHA)s to prevent spamming
-~~* [Go-MySQL-Driver](github.com/go-sql-driver/mysql) as a MySQL Driver for Go's [database/sql](http://golang.org/pkg/database/sql) package~~
+* ~~[Go-MySQL-Driver](github.com/go-sql-driver/mysql) as a MySQL Driver for Go's [database/sql](http://golang.org/pkg/database/sql) package~~
 * [pq](github.com/lib/pq) as a PostgreSQL driver for Go's [database/sql](http://golang.org/pkg/database/sql) package
 * [GoRelic](http://github.com/yvasiyarov/gorelic) for integration with [NewRelic](http://newrelic.com) for app performance statistics
 
