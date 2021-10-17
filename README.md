@@ -1,4 +1,4 @@
- #[Redu.se](http://redu.se)
+ #Redu.se
 Redu.se is a simple URL shortener, designed to allow the user to reduce the length of a URL that they wish to send to someone, or print out and have people be able to easily type into their web browser.
 
 ##Overview
